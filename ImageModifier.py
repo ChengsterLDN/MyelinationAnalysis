@@ -1,7 +1,7 @@
 from PIL import Image
 import os
 
-input_dir = "C:\\Users\\jonat\\Myelination\\Myelination\\dataset\\train\\3"
+input_dir = "C:\\Users\\jonat\\Myelination\\Myelination\\dataset\\train\\1"
 output_dir = input_dir
 
 print("Rotating Path: ", input_dir)
