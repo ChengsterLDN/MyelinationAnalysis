@@ -6,7 +6,10 @@ from datasets import load_dataset
 import numpy as np
 import evaluate
 
-dataset = load_dataset("imagefolder", data_dir = "C:\\Users\\Jonathon Cheng\\Myelination\\dataset")
+# Set device to GPU if available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+dataset = load_dataset("imagefolder", data_dir = "C:\\Users\\jonat\\Myelination\\dataset")
 
 # Load Pretrained ViT model and processor
 
@@ -14,6 +17,10 @@ processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224-in21k
 model = ViTForImageClassification.from_pretrained("google/vit-base-patch16-224-in21k",
                                                 num_labels=4,  # 0, 1, 2, 3
                                                 ignore_mismatched_sizes=True)
+
+
+# Move model to GPU
+model = model.to(device)
 
 # Preprocess function
 def preprocess(examples):
@@ -54,3 +61,10 @@ trainer = Trainer(
 
 # Start training
 trainer.train()
+
+print(torch.cuda.memory_allocated(device)/1024**2, "MB")
+print(torch.cuda.memory_reserved(device)/1024**2, "MB")
+
+# Save the trained model and processor
+model.save_pretrained("./my_ring_completeness_model")
+processor.save_pretrained("./my_ring_completeness_model")
