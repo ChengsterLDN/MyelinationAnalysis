@@ -37,7 +37,7 @@ def predict_ring_completeness(image_path):
     return id2label[predicted_class_idx], logits.softmax(dim=1)
 
 # Test 
-image_path = "C:\\Users\\jonat\\Myelination\\test_images\\cell_59.png"
+image_path = "C:\\Users\\jonat\\Myelination\\test_images\\cell_82.png"
 predicted_class, probabilities = predict_ring_completeness(image_path)
 print(f"Predicted class: {predicted_class}")
 print(f"Class probabilities: {probabilities}")
