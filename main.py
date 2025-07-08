@@ -66,5 +66,5 @@ print(torch.cuda.memory_allocated(device)/1024**2, "MB")
 print(torch.cuda.memory_reserved(device)/1024**2, "MB")
 
 # Save the trained model and processor
-model.save_pretrained("./my_ring_completeness_model")
-processor.save_pretrained("./my_ring_completeness_model")
+"""model.save_pretrained("./my_ring_completeness_model")
+processor.save_pretrained("./my_ring_completeness_model")"""
