@@ -41,7 +41,7 @@ def compute_metrics(eval_pred):
 
 # Training setup (simplified)
 training_args = TrainingArguments(
-    output_dir="./results",
+    output_dir="./Modelv1.1",
     per_device_train_batch_size=16,
     eval_strategy="epoch",
     num_train_epochs=3,
@@ -59,12 +59,12 @@ trainer = Trainer(
     compute_metrics=compute_metrics,
 )
 
+
 # Start training
-trainer.train()
+#trainer.train()
+trainer.train(resume_from_checkpoint=True)
 
 print(torch.cuda.memory_allocated(device)/1024**2, "MB")
 print(torch.cuda.memory_reserved(device)/1024**2, "MB")
 
-# Save the trained model and processor
-"""model.save_pretrained("./my_ring_completeness_model")
-processor.save_pretrained("./my_ring_completeness_model")"""
+
