@@ -7,7 +7,7 @@ image = cv2.imread("cell_29.png")
 hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
 # Isolate yellow
-lower_yellow = np.array([20, 100, 100])  # Adjust these HSV ranges
+lower_yellow = np.array([20, 100, 100])  
 upper_yellow = np.array([30, 255, 255])
 yellow_mask = cv2.inRange(hsv, lower_yellow, upper_yellow)
 
@@ -31,7 +31,7 @@ ring_mask = cv2.morphologyEx(ring_mask, cv2.MORPH_OPEN, kernel, iterations=1)
 # Skeletonize and measure thickness
 skeleton = skeletonize(ring_mask.astype(bool)).astype(np.uint8) * 255
 dist_transform = cv2.distanceTransform(ring_mask, cv2.DIST_L2, 3)
-thickness_values = dist_transform[skeleton == 255] * 2  # Convert radius to diameter
+thickness_values = dist_transform[skeleton == 255] * 2  
 
 
 avg_thickness = np.mean(thickness_values)
