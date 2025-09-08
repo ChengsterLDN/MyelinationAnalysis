@@ -14,7 +14,7 @@ dataset = load_dataset("imagefolder", data_dir = "C:\\Users\\jonat\\Myelination\
 # Load Pretrained ViT model and processor
 
 processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224-in21k")
-model = ViTForImageClassification.from_pretrained("./Modelv1.4/Run1",
+model = ViTForImageClassification.from_pretrained("./Modelv1.4/Run2",
                                                 num_labels=4,  # 0, 1, 2, 3
                                                 ignore_mismatched_sizes=True)
 
@@ -74,8 +74,8 @@ trainer = Trainer(
 
 
 # Start training
-#trainer.train()
-trainer.train(resume_from_checkpoint=True)
+trainer.train()
+#trainer.train(resume_from_checkpoint=True)
 
 #print(torch.cuda.memory_allocated(device)/1024**2, "MB")
 #print(torch.cuda.memory_reserved(device)/1024**2, "MB")
