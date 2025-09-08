@@ -14,7 +14,7 @@ dataset = load_dataset("imagefolder", data_dir = "C:\\Users\\jonat\\Myelination\
 # Load Pretrained ViT model and processor
 
 processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224-in21k")
-model = ViTForImageClassification.from_pretrained("./Modelv1.4/Run2",
+model = ViTForImageClassification.from_pretrained("./Modelv1.4/Run1",
                                                 num_labels=4,  # 0, 1, 2, 3
                                                 ignore_mismatched_sizes=True)
 
