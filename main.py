@@ -24,11 +24,21 @@ model = model.to(device)
 
 # Preprocess function
 def preprocess(examples):
-    return processor(images=examples["image"], return_tensors="pt")
+
+    # Process images
+    inputs = processor(images=examples["image"], return_tensors="pt")
+    
+    # Add labels if they exist
+    if "label" in examples:
+        inputs["labels"] = examples["label"]
+    
+    return inputs
+
+    #return processor(images=examples["image"], return_tensors="pt")
 
 # Preprocessing 
 
-dataset = dataset.map(preprocess, batched = True)
+dataset = dataset.map(preprocess, batched=True, remove_columns=["image"])
 
 # Evaluation
 
@@ -41,13 +51,15 @@ def compute_metrics(eval_pred):
 
 # Training setup (simplified)
 training_args = TrainingArguments(
-    output_dir="./Modelv1.3",
+    output_dir="./Modelv1.4",
     per_device_train_batch_size=16,
     eval_strategy="epoch",
     num_train_epochs=3,
     save_steps=500,
     eval_steps=500,
     logging_dir="./logs",
+    logging_steps=10,  # Add logging to see progress
+    report_to="none",   # Disable wandb/etc if not needed
 )
 
 trainer = Trainer(
@@ -61,8 +73,8 @@ trainer = Trainer(
 
 
 # Start training
-#trainer.train()
-trainer.train(resume_from_checkpoint=True)
+trainer.train()
+#trainer.train(resume_from_checkpoint=True)
 
 #print(torch.cuda.memory_allocated(device)/1024**2, "MB")
 #print(torch.cuda.memory_reserved(device)/1024**2, "MB")
