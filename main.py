@@ -74,8 +74,8 @@ trainer = Trainer(
 
 
 # Start training
-trainer.train()
-#trainer.train(resume_from_checkpoint=True)
+#trainer.train()
+trainer.train(resume_from_checkpoint=True)
 
 #print(torch.cuda.memory_allocated(device)/1024**2, "MB")
 #print(torch.cuda.memory_reserved(device)/1024**2, "MB")
