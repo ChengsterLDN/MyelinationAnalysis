@@ -14,7 +14,7 @@ dataset = load_dataset("imagefolder", data_dir = "C:\\Users\\jonat\\Myelination\
 # Load Pretrained ViT model and processor
 
 processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224-in21k")
-model = ViTForImageClassification.from_pretrained("google/vit-base-patch16-224-in21k",
+model = ViTForImageClassification.from_pretrained("./Modelv1.4/Run2",
                                                 num_labels=4,  # 0, 1, 2, 3
                                                 ignore_mismatched_sizes=True)
 
@@ -58,8 +58,9 @@ training_args = TrainingArguments(
     save_steps=500,
     eval_steps=500,
     logging_dir="./logs",
-    logging_steps=10,  # Add logging to see progress
+    logging_steps=50,  # Add logging to see progress
     report_to="none",   # Disable wandb/etc if not needed
+    #load_best_model_at_end=True
 )
 
 trainer = Trainer(

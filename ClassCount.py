@@ -5,7 +5,7 @@ import torch
 from transformers import ViTImageProcessor, ViTForImageClassification
 
 # 1. Load your trained model
-model_path = "./Modelv1.3/checkpoint-3033"  
+model_path = "./Modelv1.4/checkpoint-3024"  
 model = ViTForImageClassification.from_pretrained(model_path)
 processor = ViTImageProcessor.from_pretrained(model_path)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
