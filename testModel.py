@@ -4,8 +4,8 @@ import torch
 from transformers import ViTImageProcessor, ViTForImageClassification
 
 # Load your saved model and processor
-model = ViTForImageClassification.from_pretrained("./my_ring_completeness_model")
-processor = ViTImageProcessor.from_pretrained("./my_ring_completeness_model")
+model = ViTForImageClassification.from_pretrained("./results/checkpoint-255")
+processor = ViTImageProcessor.from_pretrained("./results/checkpoint-255")
 
 # Set device (GPU if available)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -31,13 +31,13 @@ def predict_ring_completeness(image_path):
         0: "non-existent",
         1: "less than half",
         2: "more than half",
-        3: "complete"  
+        3: "complete"       
     }
     
     return id2label[predicted_class_idx], logits.softmax(dim=1)
 
 # Test 
-image_path = "C:\\Users\\jonat\\Myelination\\test_images\\cell_59.png"
+image_path = "C:\\Users\\jonat\\Myelination\\test_images\\cell_7.png"
 predicted_class, probabilities = predict_ring_completeness(image_path)
 print(f"Predicted class: {predicted_class}")
 print(f"Class probabilities: {probabilities}")
