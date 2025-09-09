@@ -1,128 +1,62 @@
 import cv2
-
 import os
-
 import numpy as np
-
 from tkinter import Tk, Button, Canvas, Label, Toplevel, filedialog, messagebox
-
 from PIL import Image, ImageTk, ImageEnhance
-
 from scipy.ndimage import convolve
-
-
-
-
 
 # Set up directories for saving
 
 os.makedirs('0', exist_ok=True)
-
 os.makedirs('1', exist_ok=True)
-
 os.makedirs('2', exist_ok=True)
-
 os.makedirs('3', exist_ok=True)
-
-
 
 class MyelinAnalyzerApp:
 
     def __init__(self, root, pillar_image_path, myelin_image_path):
-
         self.root = root
-
         self.root.title("Myelin Analyzer")
-
         # Store image paths for later saving
-        self.pillar_image_path = pillar_image_path
-        
+        self.pillar_image_path = pillar_image_path        
         self.myelin_image_path = myelin_image_path
-
         self.dot_positions = []
-
-        self.box_positions = []  # List to store ordered box positions for sorting
-
-        self.coordinate_matrix = []  # To store sorted coordinates
-
-        self.current_cell_index = 0  # To track which cell is being sorted
-
+        self.box_positions = []  
+        self.coordinate_matrix = [] 
+        self.current_cell_index = 0  
         self.canvas = Canvas(root)
-
         self.myelin_canvas = Canvas(root)
-
-        # Load images in color
-
         self.pillar_image = cv2.imread(pillar_image_path, cv2.IMREAD_COLOR)
-
         self.myelin_image = cv2.imread(myelin_image_path, cv2.IMREAD_COLOR)
-
-        # self.overlay_pillar_on_myelin(alpha=0.2)
-
-        #overlay_image = cv2.imread(self.overlay_image_path, cv2.IMREAD_COLOR)
-
-        #self.display_myelin_image = self.resize_image(overlay_image)
-
         self.display_myelin_image = self.resize_image(self.myelin_image)
-
         self.myelin_photo = ImageTk.PhotoImage(image=Image.fromarray(cv2.cvtColor(self.display_myelin_image, cv2.COLOR_BGR2RGB)))
-
         self.myelin_canvas.create_image(0, 0, anchor='nw', image=self.myelin_photo)
-
         self.is_select_empty_mode = False
-
         self.empty_cells = set()
-
-        # Resize images to fit the window while keeping aspect ratio
 
 # Resize images to fit the window while keeping aspect ratio
 
         self.display_pillar_image = self.resize_image(self.pillar_image)
-
         self.display_myelin_image = self.resize_image(self.myelin_image)
-
         self.display_pillar_scale = self.pillar_image.shape[1] / self.display_pillar_image.shape[1]  # Define display scale
-
         self.canvas = Canvas(root, width=self.display_pillar_image.shape[1], height=self.display_pillar_image.shape[0])
-
         self.canvas.grid(row=0, column=0)
 
         # Create a canvas to allow grid drawing and dragging
 
 # Create a canvas for displaying the overlay image beside the pillar image
-
         self.myelin_canvas = Canvas(root, width=self.display_myelin_image.shape[1], height=self.display_myelin_image.shape[0])
-
         self.myelin_canvas.grid(row=0, column=1)
-
-        # Display the myelin overlay image on the canvas
-
         self.myelin_photo = ImageTk.PhotoImage(image=Image.fromarray(cv2.cvtColor(self.display_myelin_image, cv2.COLOR_BGR2RGB)))
-
         self.myelin_canvas.create_image(0, 0, anchor='nw', image=self.myelin_photo)
-
-        # Display pillar image on the canvas
-
         self.pillar_photo = ImageTk.PhotoImage(image=Image.fromarray(cv2.cvtColor(self.display_pillar_image, cv2.COLOR_BGR2RGB)))
-
         self.canvas.create_image(0, 0, anchor='nw', image=self.pillar_photo)
 
-        # Initialize 15x15 grid and draw it
-
+        # Initialise 15x15 grid 
         self.grid_lines = []
-
         self.canvas.bind("<Button-1>", self.on_canvas_click)
-
-        self.canvas.bind("<Configure>", self.on_resize)  # Add this line to bind resizing
-
-
-
-
-
-# Add a new button in the `__init__` method to trigger detection
-
+        self.canvas.bind("<Configure>", self.on_resize) 
         self.detect_button = Button(root, text="Detect Pillar Centers", command=self.detect_pillar_centers)
-
         self.detect_button.grid(row=1, column=0, pady=5)
 
 
@@ -130,78 +64,42 @@ class MyelinAnalyzerApp:
         # Add Dot and Delete Dot buttons
 
         self.add_dot_button = Button(root, text="Add Dot", command=self.enable_add_dot_mode)
-
         self.add_dot_button.grid(row=2, column=0, pady=5)
 
-
-
         self.delete_dot_button = Button(root, text="Delete Dot", command=self.enable_delete_dot_mode)
-
         self.delete_dot_button.grid(row=3, column=0, pady=5)
 
-
-
         self.count_button = Button(root, text="Count", command=self.save_cropped_images)
-
         self.count_button.grid(row=8, column=0, columnspan=2, pady=10)
-
-
 
         # Create Boxes button
 
         self.create_boxes_button = Button(root, text="Create Boxes", command=self.create_boxes)
-
         self.create_boxes_button.grid(row=4, column=0, pady=5)
-
-
-
-
 
         # Initialize add/delete dot mode flags
 
         self.add_dot_mode = False
-
         self.delete_dot_mode = False
 
-
-
         # Filter button
-
-
 
         # Sort button (initially disabled until filtering is applied)
 
         self.sort_button = Button(root, text="Sort", command=self.sort_images, state='disabled')
-
         self.sort_button.grid(row=6, column=0, pady=5)
-
-
-
         self.overlay_scale_x = self.myelin_image.shape[1] / self.display_myelin_image.shape[1]
-
-
         self.overlay_scale_y = self.myelin_image.shape[0] / self.display_myelin_image.shape[0]
-
-
-
         self.score_labels = {}
-
         self.score_counts = {0: 0, 1: 0, 2: 0, 3: 0}
-
         self.total_scored_label = Label(root, text="Total Scored: 0")
-
         self.total_scored_label.grid(row=9, column=0, columnspan=2)
-
         self.total_boxes_label = Label(root, text="Total Boxes Created: 0")
-
         self.total_boxes_label.grid(row=10, column=0, columnspan=2)
 
     def on_resize(self, event):
-
         # """Handle window resizing by updating the displayed cell image size."""
-
         # self.canvas.config(width=event.width, height=event.height)
-
         return
 
 
@@ -209,102 +107,54 @@ class MyelinAnalyzerApp:
     def overlay_pillar_on_myelin(self, alpha=0.3):
 
         """Overlay the pillar image on the myelin image, save it, and update display."""
-
         if self.pillar_image.shape[:2] != self.myelin_image.shape[:2]:
-
             messagebox.showwarning("Warning", "Pillar and myelin images have different dimensions. Resizing may distort the images.")
-
-
-
         # Resize the pillar image to match the myelin image dimensions
-
         pillar_resized = cv2.resize(self.pillar_image, (self.myelin_image.shape[1], self.myelin_image.shape[0]))
-
-
-
         # Convert images from BGR to RGB for correct color representation in PIL
 
         myelin_rgb = cv2.cvtColor(self.myelin_image, cv2.COLOR_BGR2RGB)
-
         pillar_rgb = cv2.cvtColor(pillar_resized, cv2.COLOR_BGR2RGB)
 
-
-
         # Convert images to RGBA format to support transparency in PIL
-
         myelin_rgba = Image.fromarray(myelin_rgb).convert("RGBA")
-
         pillar_rgba = Image.fromarray(pillar_rgb).convert("RGBA")
 
-
-
         # Set the alpha channel for the pillar image to control transparency
-
         pillar_rgba.putalpha(int(255 * alpha))
 
-
-
         # Composite the translucent pillar image on top of the myelin image
-
         blended_image = Image.alpha_composite(myelin_rgba, pillar_rgba)
 
-
-
         # Save the overlay image
-
         overlay_image_path = "overlay_myelin_pillar.png"
-
         blended_image.save(overlay_image_path)
-
         self.overlay_image_path = overlay_image_path  # Store the path for later reference
-
-
 
         # Convert back to BGR format for OpenCV and update the myelin image
 
         self.myelin_image = cv2.cvtColor(np.array(blended_image), cv2.COLOR_RGBA2BGR)
 
     def resize_image(self, image, max_size=600):
-
         h, w = image.shape[:2]
-
         if h <= max_size and w <= max_size:  # Add this check
-
             return image  # Return the original image if it's already small enough
-
         scale = min(max_size / h, max_size / w)
-
         return cv2.resize(image, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
 
     def sort_images(self):
-
         """Extracts each boxed region from the overlay image in order for classification."""
-
         self.current_cell_index = 0
-
         self.grid_cells = []
 
-
-
         for i, (x1, y1, x2, y2) in enumerate(self.box_positions):
-
             # Ensure we are extracting from the overlayed image
-
             cell_img = self.myelin_image[y1:y2, x1:x2]
-
             cell_img_pil = Image.fromarray(cv2.cvtColor(cell_img, cv2.COLOR_BGR2RGB))
-
             self.grid_cells.append(cell_img_pil)
 
-
-
         # Start classifying the first cell
-
         self.classify_cell()
-
-
-
-
 
     def detect_pillar_centers(self):
 
@@ -376,62 +226,37 @@ class MyelinAnalyzerApp:
 
             messagebox.showinfo("Detection Complete", f"Detected {len(self.dot_positions)} pillars.")
 
-
-
-
-
     def enable_add_dot_mode(self):
-
         self.add_dot_mode = True
-
         self.delete_dot_mode = False
 
-
-
     def enable_delete_dot_mode(self):
-
         self.delete_dot_mode = True
-
         self.add_dot_mode = False
-
-
 
     def on_canvas_click(self, event):
 
         if self.add_dot_mode:
-
             # Add a dot at the click location and update both positions and visuals
-
             self.dot_positions.append((event.x, event.y))
-
             dot_id = self.canvas.create_oval(event.x - 2, event.y - 2, event.x + 2, event.y + 2, fill="red")
-
             self.dot_visuals.append(dot_id)
 
         elif self.delete_dot_mode:
-
             if not self.dot_positions:
-
                 return
 
             # Find and delete the closest dot both from the canvas and dot list
 
             if self.dot_positions:
-
                 closest_dot_index = None
-
                 min_dist = float("inf")
-
-
 
                 # Find the dot with the minimum distance to the click position
 
                 for i, (x, y) in enumerate(self.dot_positions):
-
                     dist = (x - event.x) ** 2 + (y - event.y) ** 2
-
                     if dist < min_dist:
-
                         closest_dot_index, min_dist = i, dist
 
 
@@ -439,17 +264,10 @@ class MyelinAnalyzerApp:
                 # If a dot is found close enough to the click, delete it
 
                 if closest_dot_index is not None:
-
                     # Remove the dot from the canvas and update both lists
-
                     self.canvas.delete(self.dot_visuals[closest_dot_index])
-
                     del self.dot_positions[closest_dot_index]
-
                     del self.dot_visuals[closest_dot_index]
-
-
-
 
 
     def create_boxes(self):

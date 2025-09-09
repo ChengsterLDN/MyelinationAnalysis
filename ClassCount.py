@@ -20,7 +20,7 @@ def predict_image(image_path):
     return outputs.logits.argmax().item()
 
 # 3. Process all images in folder
-test_folder = "./test_images"  
+test_folder = 'C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/MBP DATA/MBP V5 coating/Fibronectin/3_3/boxes'
 class_counts = {0: 0, 1: 0, 2: 0, 3: 0}
 
 start_time = time.time()
