@@ -3,3 +3,9 @@ dataset/
 Archive.zip
 train/
 test/
+ValidationDataset/
+MBPValidationDataset/
+PillarValidationDataset/
+PillarValidationDataset/
+LIFAccess/build/
+LIFAccess/dist/

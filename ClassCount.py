@@ -5,7 +5,7 @@ import torch
 from transformers import ViTImageProcessor, ViTForImageClassification
 
 # 1. Load your trained model
-model_path = "./Modelv1.4/Run3"  
+model_path = "./Modelv1.4/Run1"  
 model = ViTForImageClassification.from_pretrained(model_path)
 processor = ViTImageProcessor.from_pretrained(model_path)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -20,7 +20,8 @@ def predict_image(image_path):
     return outputs.logits.argmax().item()
 
 # 3. Process all images in folder
-test_folder = "./test_images"  
+test_folder = 'C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/MBP DATA/MBP V5 coating/PDL/3_3/boxes'
+#test_folder = './test_images'
 class_counts = {0: 0, 1: 0, 2: 0, 3: 0}
 
 start_time = time.time()
@@ -30,6 +31,7 @@ for img_file in os.listdir(test_folder):
             img_path = os.path.join(test_folder, img_file)
             pred_class = predict_image(img_path)
             class_counts[pred_class] += 1
+            #print(img_file + ": " + str(pred_class))
         except Exception as e:
             print(f"Error processing {img_file}: {str(e)}")
 
