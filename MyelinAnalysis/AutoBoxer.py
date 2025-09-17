@@ -5,7 +5,7 @@ from tkinter import Tk, Button, Canvas, Label, Toplevel, filedialog, messagebox
 from PIL import Image, ImageTk, ImageEnhance
 from scipy.ndimage import convolve
 
-os.makedirs('boxes', exist_ok=True)
+#os.makedirs('boxes', exist_ok=True)
 
 
 class MyelinAnalyzerApp:
@@ -47,23 +47,9 @@ class MyelinAnalyzerApp:
         self.myelin_canvas.create_image(0, 0, anchor='nw', image=self.myelin_photo)
         self.pillar_photo = ImageTk.PhotoImage(image=Image.fromarray(cv2.cvtColor(self.display_pillar_image, cv2.COLOR_BGR2RGB)))
         self.canvas.create_image(0, 0, anchor='nw', image=self.pillar_photo)
-
-        # Initialise 15x15 grid 
-        self.grid_lines = []
-        self.canvas.bind("<Configure>", self.on_resize) 
-        self.detect_button = Button(root, text="Extract Boxes", command=self.extract)
-        self.detect_button.grid(row=1, column=0, pady=5)
-
-        # Filter button
-
-        # Sort button (initially disabled until filtering is applied)
         self.overlay_scale_x = self.myelin_image.shape[1] / self.display_myelin_image.shape[1]
         self.overlay_scale_y = self.myelin_image.shape[0] / self.display_myelin_image.shape[0]
-
-    def on_resize(self, event):
-        # """Handle window resizing by updating the displayed cell image size."""
-        # self.canvas.config(width=event.width, height=event.height)
-        return
+        self.extract()
 
     def overlay_pillar_on_myelin(self, alpha=0.3):
 
@@ -142,8 +128,8 @@ class MyelinAnalyzerApp:
         if not self.dot_positions:
             messagebox.showinfo("Detection Complete", "No pillars detected.")
 
-        else:
-            messagebox.showinfo("Detection Complete", f"Detected {len(self.dot_positions)} pillars.")
+        #else:
+            #messagebox.showinfo("Detection Complete", f"Detected {len(self.dot_positions)} pillars.")
 
         """Create boxes around detected centers and display scoring buttons."""
         box_size = 30
@@ -167,7 +153,7 @@ class MyelinAnalyzerApp:
             # Draw a blue rectangle on the canvas
             self.myelin_canvas.create_rectangle(x1, y1, x2, y2, outline="blue", width=2, tags="box")
 
-        print(f"Created {len(self.box_positions)} boxes.")
+        #print(f"Created {len(self.box_positions)} boxes.")
 
 
         """Save all cropped box images."""
@@ -193,11 +179,11 @@ class MyelinAnalyzerApp:
             x2_cropped = min(base_image.shape[1], x2_orig)
 
             cropped_img = base_image[y1_cropped:y2_cropped, x1_cropped:x2_cropped]
-            file_path = f"boxes/box_{i}.png"
+            file_path = output_folder + f"/boxes/box_{i}.png"
             cv2.imwrite(file_path, cropped_img)
             print(f"Saved {file_path}")
         
-        messagebox.showinfo("Save Complete", f"All {len(self.box_positions)} boxes have been saved to 'boxes' folder.")
+        #messagebox.showinfo("Save Complete", f"All {len(self.box_positions)} boxes have been saved to 'boxes' folder.")
         root.destroy()
 
 
@@ -212,26 +198,12 @@ class MyelinAnalyzerApp:
         y2 = int(self.horizontal_lines[row + 1])
         return x1, y1, x2, y2
 
-    
-
-    def update_box_highlight(self, index, color="white"):
-
-        """Highlight the box at the given index with the specified color."""
-        # Use box coordinates directly
-        x1, y1, x2, y2 = self.box_positions[index]
-        # Delete any previous highlights
-        self.myelin_canvas.delete("highlight")
-        # Draw a rectangle to highlight the box
-        self.myelin_canvas.create_rectangle(x1, y1, x2, y2, outline=color, width=3, tags="highlight")
-
-
-
-# Run the app
-
 if __name__ == "__main__":
     root = Tk()
     pillar_image_path = filedialog.askopenfilename(title="Select Pillar Image")
     myelin_image_path = filedialog.askopenfilename(title="Select Myelin Image")
+    output_folder = filedialog.askdirectory(title="Select Output Directory")
+    os.makedirs(output_folder + f'/boxes', exist_ok=True)
 
     
 
