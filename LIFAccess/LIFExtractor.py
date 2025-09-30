@@ -28,10 +28,19 @@ def process_lif_file(lif_file_path):
             dims = lif_image.dims
             print(f"  Dimensions: {dims}")
             print(f"  Channels: {lif_image.channels}")
+            # Create main directory for this image
             img_dir = os.path.join(output_dir, f'image_{img_index}')
             os.makedirs(img_dir, exist_ok=True)
+            
+            # Create subdirectories for each channel
+            channel_names = {0: "nuclei", 1: "mbp", 2: "pillar"}
+            for channel in [0, 1, 2]:
+                if channel >= lif_image.channels:
+                    continue 
+                channel_dir = os.path.join(img_dir, channel_names[channel])
+                os.makedirs(channel_dir, exist_ok=True)
 
-            for channel in [1, 2]:
+            for channel in [0, 1, 2]:
                 if channel > lif_image.channels:
                     print(f"  Channel {channel} not available (only {lif_image.channels} channels)")
                     continue
@@ -53,12 +62,19 @@ def process_lif_file(lif_file_path):
                             elif channel == 1:
                                 colored_image = cyan_cmap(normalized_image)
                                 channel_name = "cyan"
+
+                            elif channel == 0:
+                                colored_image = cyan_cmap(normalized_image)
+                                channel_name = "cyan"
                             
                             rgb_image = (colored_image[:, :, :3] * 255).astype(np.uint8)
                             img = Image.fromarray(rgb_image, 'RGB')
                             
+                            # Determine channel directory and filename
+                            channel_dir = os.path.join(img_dir, channel_names[channel])
                             filename = f'img_{img_index}_c{channel}_{channel_name}_z{z}_t{t}.png'
-                            filepath = os.path.join(img_dir, filename)
+                            filepath = os.path.join(channel_dir, filename)
+
                             img.save(filepath, format='PNG')
                             print(f"    Saved: {filename}")
                             

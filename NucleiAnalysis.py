@@ -71,8 +71,8 @@ final_binary = filtered_mask
 contours_final, _ = cv2.findContours(final_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 # Define size thresholds (adjust better)
-MIN_SIZE_THRESHOLD = 700   # Minimum area in pixels for "large" particles
-MAX_SIZE_THRESHOLD = 5000   # Max area
+MIN_SIZE_THRESHOLD = 450   # Minimum area in pixels for "large" particles
+MAX_SIZE_THRESHOLD = 10000   # Max area
 
 # Count particles above size threshold
 large_particles = []
