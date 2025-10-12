@@ -5,7 +5,7 @@ import torch
 from transformers import ViTImageProcessor, ViTForImageClassification
 
 
-model_path = "./Modelv1.4/Run2"  
+model_path = "./Modelv1.4/Run3New"  
 model = ViTForImageClassification.from_pretrained(model_path)
 processor = ViTImageProcessor.from_pretrained(model_path)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -20,7 +20,7 @@ def predict_image(image_path):
     return outputs.logits.argmax().item()
 
 
-root_directory = 'C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/MBP DATA/MBP V5 coating/Fibronectin'
+root_directory = 'C:\\Users\\jonat\\OneDrive - University College London\\Documents\\UCL\\Summer 2025\\MyelinationProject\\240925'
 #root_directory = './test_images' 
 
 boxes_folders = []

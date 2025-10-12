@@ -3,33 +3,17 @@ import numpy as np
 import os
 from matplotlib import pyplot as plt
 
-folder_path = 'C:\\Users\\jonat\\OneDrive - University College London\\Documents\\UCL\\Summer 2025\\MyelinationProject\\PDL_extracted_pngs\\image_8\\nuclei'
+#folder_path = 'C:\\Users\\jonat\\OneDrive - University College London\\Documents\\UCL\\Summer 2025\\MyelinationProject\\PDL_extracted_pngs\\image_8\\nuclei'
+
 #folder_path = 'C:\\Users\\Jonathon Cheng\\OneDrive - University College London\\Documents\\UCL\\Summer 2025\\MyelinationProject\\PDL_extracted_pngs\\image_1\\nuclei'
 
-file_list = sorted([f for f in os.listdir(folder_path) if f.endswith('.png')])
 
-# Initialize an empty list to hold the images as arrays
-image_stack = []
+mip_path = 'C:\\Users\\jonat\\OneDrive - University College London\\Documents\\UCL\\Summer 2025\\MyelinationProject\\240925\\DMSO-5\\MAX_3D pup OL 3doses  test t3 24sept25.lif - DMSO-5 - C=0.png'  # Add your MIP image path here
+mip = cv2.imread(mip_path)
 
-for filename in file_list:
-    filepath = os.path.join(folder_path, filename)
-    # Read the image. cv2.imread reads in BGR color order by default.
-    img = cv2.imread(filepath)
-    # DECREASE BRIGHTNESS
-    brightness_reduction_factor = 0.1
-
-    img_float = img.astype(np.float32)
-    img_darker = img_float * brightness_reduction_factor
-    img = np.clip(img_darker, 0, 255).astype(np.uint8)
-
-
-    image_stack.append(img)
-
-# Convert the list to a NumPy array
-image_stack = np.array(image_stack)
-
-# Perform the max projection
-mip = np.max(image_stack, axis=0)
+if mip is None:
+    print(f"Error: Could not load MIP image from {mip_path}")
+    exit()
 
 # OpenCV uses BGR order, so if you want RGB for saving or display, convert it.
 # If your PNGs are grayscale, skip 
@@ -68,7 +52,7 @@ contours_final, _ = cv2.findContours(final_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_
 
 # Define size thresholds (adjust better)
 MIN_SIZE_THRESHOLD = 450   # Minimum area in pixels for "large" particles
-MAX_SIZE_THRESHOLD = 10000   # Max area
+MAX_SIZE_THRESHOLD = 7500   # Max area
 
 # Count particles above size threshold
 large_particles = []
@@ -127,94 +111,6 @@ if circularities:
     print(num_large_particles)
 else:
     print("No valid particles for circularity analysis")
-
-## ---NUCLEI DISTRIBUTION---
-
-# Create histogram of nuclei areas
-plt.figure(figsize=(12, 8))
-
-# Plot 1: Histogram of all particle areas
-plt.subplot(2, 2, 1)
-plt.hist(particle_areas, bins=30, alpha=0.7, color='skyblue', edgecolor='black')
-plt.axvline(x=MIN_SIZE_THRESHOLD, color='red', linestyle='--', label=f'Min Threshold: {MIN_SIZE_THRESHOLD}')
-plt.axvline(x=MAX_SIZE_THRESHOLD, color='orange', linestyle='--', label=f'Max Threshold: {MAX_SIZE_THRESHOLD}')
-plt.xlabel('Area (pixels)')
-plt.ylabel('Frequency')
-plt.title('Distribution of All Object Areas')
-plt.legend()
-plt.grid(True, alpha=0.3)
-
-# Plot 2: Histogram of large particles only (filtered)
-large_particle_areas = [cv2.contourArea(cnt) for cnt in large_particles]
-plt.subplot(2, 2, 2)
-if large_particle_areas:
-    plt.hist(large_particle_areas, bins=20, alpha=0.7, color='lightgreen', edgecolor='black')
-    plt.xlabel('Area (pixels)')
-    plt.ylabel('Frequency')
-    plt.title(f'Distribution of Acceptable Nuclei Areas\n({len(large_particle_areas)} particles)')
-    plt.grid(True, alpha=0.3)
-else:
-    plt.text(0.5, 0.5, 'No large particles found', ha='center', va='center', transform=plt.gca().transAxes)
-    plt.title('Distribution of Acceptable Nuclei Areas')
-
-# Plot 3: Box plot of particle areas
-plt.subplot(2, 2, 3)
-if particle_areas:
-    plt.boxplot(particle_areas, vert=True)
-    plt.ylabel('Area (pixels)')
-    plt.title('Box Plot of Nuclei Areas')
-    # Add some statistics as text
-    stats_text = f'Min: {np.min(particle_areas):.0f}\nMax: {np.max(particle_areas):.0f}\nMedian: {np.median(particle_areas):.0f}\nMean: {np.mean(particle_areas):.0f}'
-    plt.text(0.7, 0.95, stats_text, transform=plt.gca().transAxes, bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8))
-else:
-    plt.text(0.5, 0.5, 'No particles found', ha='center', va='center', transform=plt.gca().transAxes)
-    plt.title('Box Plot of Nuclei Areas')
-
-# Plot 4: Area vs Circularity scatter plot (if you have both metrics)
-plt.subplot(2, 2, 4)
-if particle_areas and circularities:
-    # Make sure we're comparing the same number of particles
-    min_length = min(len(particle_areas), len(circularities))
-    areas_for_plot = particle_areas[:min_length]
-    circularities_for_plot = circularities[:min_length]
-    
-    plt.scatter(areas_for_plot, circularities_for_plot, alpha=0.6, color='purple')
-    plt.xlabel('Area (pixels)')
-    plt.ylabel('Circularity')
-    plt.title('Area vs Circularity')
-    plt.grid(True, alpha=0.3)
-    
-    # Add correlation coefficient
-    correlation = np.corrcoef(areas_for_plot, circularities_for_plot)[0, 1]
-    plt.text(0.05, 0.95, f'Correlation: {correlation:.3f}', transform=plt.gca().transAxes, 
-             bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8))
-else:
-    plt.text(0.5, 0.5, 'No data for scatter plot', ha='center', va='center', transform=plt.gca().transAxes)
-    plt.title('Area vs Circularity')
-
-plt.tight_layout()
-plt.show()
-
-# Print area statistics
-print("\n=== AREA ANALYSIS ===")
-if particle_areas:
-    print(f"Total particles detected: {len(particle_areas)}")
-    print(f"Large particles (size filtered): {num_large_particles}")
-    print(f"Area statistics (all particles):")
-    print(f"  Minimum area: {np.min(particle_areas):.2f} pixels")
-    print(f"  Maximum area: {np.max(particle_areas):.2f} pixels")
-    print(f"  Mean area: {np.mean(particle_areas):.2f} pixels")
-    print(f"  Median area: {np.median(particle_areas):.2f} pixels")
-    print(f"  Standard deviation: {np.std(particle_areas):.2f} pixels")
-    
-    if large_particle_areas:
-        print(f"\nArea statistics (large particles only):")
-        print(f"  Minimum area: {np.min(large_particle_areas):.2f} pixels")
-        print(f"  Maximum area: {np.max(large_particle_areas):.2f} pixels")
-        print(f"  Mean area: {np.mean(large_particle_areas):.2f} pixels")
-        print(f"  Median area: {np.median(large_particle_areas):.2f} pixels")
-else:
-    print("No particles found for area analysis")
 
     
 # Create visualisation with large particles coloured differently
