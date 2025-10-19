@@ -5,9 +5,6 @@ from tkinter import Tk, Button, Canvas, Label, Toplevel, filedialog, messagebox
 from PIL import Image, ImageTk, ImageEnhance
 from scipy.ndimage import convolve
 
-#os.makedirs('boxes', exist_ok=True)
-
-
 class MyelinAnalyzerApp:
 
     def __init__(self, root, pillar_image_path, myelin_image_path):
@@ -37,8 +34,6 @@ class MyelinAnalyzerApp:
         self.display_pillar_scale = self.pillar_image.shape[1] / self.display_pillar_image.shape[1]  # Define display scale
         self.canvas = Canvas(root, width=self.display_pillar_image.shape[1], height=self.display_pillar_image.shape[0])
         self.canvas.grid(row=0, column=0)
-
-        # Create a canvas to allow grid drawing and dragging
 
 # Create a canvas for displaying the overlay image beside the pillar image
         self.myelin_canvas = Canvas(root, width=self.display_myelin_image.shape[1], height=self.display_myelin_image.shape[0])
