@@ -8,7 +8,7 @@ folder_path = 'C:\\Users\\jonat\\OneDrive - University College London\\Documents
 
 file_list = sorted([f for f in os.listdir(folder_path) if f.endswith('.png')])
 
-# Initialize an empty list to hold the images as arrays
+# Initialise an empty list to hold the images as arrays
 image_stack = []
 
 for filename in file_list:
