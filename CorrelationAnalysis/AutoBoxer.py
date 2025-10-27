@@ -127,8 +127,14 @@ class AutoBoxer:
 
             cell_data.append(cell_info)
             print(f"Saved {file_path}")
+        # Get parent folder name for naming
+        if os.path.isdir(self.output_folder):
+            parent_folder_name = os.path.basename(os.path.normpath(self.output_folder))
+        else:
+            parent_folder_name = os.path.splitext(os.path.basename(self.output_folder))[0]
+
         
-        json_path = os.path.join(self.output_folder, "pillar_coords.json")
+        json_path = os.path.join(self.output_folder, f"{parent_folder_name}_pillar_coords.json")
         with open(json_path, 'w') as json_file:
             json.dump(cell_data, json_file, indent=4)
         print(f"All {len(self.box_positions)} boxes have been saved.")

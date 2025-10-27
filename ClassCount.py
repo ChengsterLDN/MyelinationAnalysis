@@ -95,7 +95,7 @@ class MyelinScorer:
 
     def run_analysis(self):
         """Main method to run the complete analysis with user dialogs"""
-        # Initialize Tkinter root
+        # Initialise Tkinter root
         root = Tk()
         root.withdraw()
         
@@ -158,7 +158,7 @@ class MyelinScorer:
             
             # Save individual folder results
             if result['wrapped_pillars']:
-                output_filename = f"wrapped_pillars_{parent_folder_name}.json"
+                output_filename = f"{parent_folder_name}_wrapped_pillars.json"
                 output_path = os.path.join(output_directory, output_filename)
                 self.save_wrapped_pillars(result['wrapped_pillars'], output_path)
                 all_wrapped_pillars.extend(result['wrapped_pillars'])
@@ -169,9 +169,9 @@ class MyelinScorer:
         total_elapsed_time = total_end_time - total_start_time
         
         # Save combined results
-        if all_wrapped_pillars:
+        """if all_wrapped_pillars:
             combined_output_path = os.path.join(output_directory, "all_wrapped_pillars.json")
-            self.save_wrapped_pillars(all_wrapped_pillars, combined_output_path)
+            self.save_wrapped_pillars(all_wrapped_pillars, combined_output_path)"""
         
         # Show final summary
         print(f"\n=== ANALYSIS COMPLETE ===")
