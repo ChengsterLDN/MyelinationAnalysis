@@ -1,274 +1,230 @@
 import cv2
 import numpy as np
 import os
-from matplotlib import pyplot as plt
-
-folder_path = 'C:\\Users\\jonat\\OneDrive - University College London\\Documents\\UCL\\Summer 2025\\MyelinationProject\\PDL_extracted_pngs\\image_8\\nuclei'
-#folder_path = 'C:\\Users\\Jonathon Cheng\\OneDrive - University College London\\Documents\\UCL\\Summer 2025\\MyelinationProject\\PDL_extracted_pngs\\image_1\\nuclei'
-
-file_list = sorted([f for f in os.listdir(folder_path) if f.endswith('.png')])
-
-# Initialise an empty list to hold the images as arrays
-image_stack = []
-
-for filename in file_list:
-    filepath = os.path.join(folder_path, filename)
-    # Read the image. cv2.imread reads in BGR color order by default.
-    img = cv2.imread(filepath)
-    # DECREASE BRIGHTNESS
-    brightness_reduction_factor = 0.1
-
-    img_float = img.astype(np.float32)
-    img_darker = img_float * brightness_reduction_factor
-    img = np.clip(img_darker, 0, 255).astype(np.uint8)
+import json
+from tkinter import Tk, filedialog, messagebox
+import glob
 
 
-    image_stack.append(img)
+class NucleiAnalyser:
+    def __init__(self, image_path, output_folder):
+        self.image_path = image_path
+        self.output_folder = output_folder
+        self.image = None
+        self.nuclei_count = []
+        self.nuclei_prop = []
 
-# Convert the list to a NumPy array
-image_stack = np.array(image_stack)
+    def mip(self, folder_path):
 
-# Perform the max projection
-mip = np.max(image_stack, axis=0)
-
-# OpenCV uses BGR order, so if you want RGB for saving or display, convert it.
-# If your PNGs are grayscale, skip 
-mip_rgb = cv2.cvtColor(mip, cv2.COLOR_BGR2RGB)
-
-# Save the image using OpenCV
-#cv2.imwrite('mip_opencv.png', mip) # saves in BGR order
-# Or, to save in RGB, use the converted image and ensure it's uint8
-# cv2.imwrite('mip_opencv_rgb.png', cv2.cvtColor(mip, cv2.COLOR_RGB2BGR))
-
-# Read the MIP image in grayscale mode (0 flag)
-#mip_gray = cv2.imread('maximum_intensity_projection.png', 0)
-
-# Convert the image to grayscale
-mip_gray = cv2.cvtColor(mip, cv2.COLOR_BGR2GRAY)
-
-# Apply Otsu's thresholding
-otsu_threshold, binary_image = cv2.threshold(mip_gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-
-MIN_OBJECT_AREA = 20       # Minimum size for objects to keep
-
-binary_cleaned = cv2.fastNlMeansDenoising(binary_image)
-
-
-# Remove very small objects by area
-contours, _ = cv2.findContours(binary_cleaned, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-final_binary = np.zeros_like(binary_cleaned)
-
-for cnt in contours:
-    if cv2.contourArea(cnt) > MIN_OBJECT_AREA:
-        cv2.drawContours(final_binary, [cnt], -1, 255, -1)
-
-# Count the number of particles in the final binary mask
-contours_final, _ = cv2.findContours(final_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-# Define size thresholds (adjust better)
-MIN_SIZE_THRESHOLD = 450   # Minimum area in pixels for "large" particles
-MAX_SIZE_THRESHOLD = 10000   # Max area
-
-# Count particles above size threshold
-large_particles = []
-particle_areas = []
-
-for cnt in contours_final:
-    area = cv2.contourArea(cnt)
-    particle_areas.append(area)
-    if area >= MIN_SIZE_THRESHOLD and area <= MAX_SIZE_THRESHOLD:
-        large_particles.append(cnt)
-
-num_large_particles = len(large_particles)
-print(f"Number of particles: {num_large_particles}")
-
-# Create separate images for large particles only
-large_particles_image = np.zeros_like(final_binary)
-cv2.drawContours(large_particles_image, large_particles, -1, 255, -1)
-
-# Calculate circularity for each particle
-circularities = []
-valid_particles = []  
-
-for i, cnt in enumerate(contours_final):
-    area = cv2.contourArea(cnt)
-    perimeter = cv2.arcLength(cnt, True)
-    
-    # Avoid division by zero and invalid contours
-    if perimeter > 0 and area > 0:
-        circularity = (4 * np.pi * area) / (perimeter ** 2)
-        circularities.append(circularity)
-        valid_particles.append(cnt)
-    else:
-        print(f"Particle {i+1}: Invalid contour (area: {area}, perimeter: {perimeter})")
-
-# Calculate statistics
-if circularities:
-    avg_circularity = np.mean(circularities)
-    median_circularity = np.median(circularities)
-    min_circularity = np.min(circularities)
-    max_circularity = np.max(circularities)
-    std_circularity = np.std(circularities)
-    
-    print("\n=== CIRCULARITY ANALYSIS ===")
-    print(f"Average circularity: {avg_circularity:.3f}")
-    print(f"Median circularity: {median_circularity:.3f}")
-    print(f"Minimum circularity: {min_circularity:.3f}")
-    print(f"Maximum circularity: {max_circularity:.3f}")
-    print(f"Standard deviation: {std_circularity:.3f}")
-    print(f"Number of particles analysed: {len(circularities)}")
-    
-    # Count particles by circularity ranges
-    high_circularity = sum(1 for c in circularities if c >= 0.8)
-    low_circularity = sum(1 for c in circularities if 0.6 <= c < 0.8)
-    anomalous_circularity = sum(1 for c in circularities if c < 0.01)
-    num_large_particles = num_large_particles - anomalous_circularity
-    print(num_large_particles)
-else:
-    print("No valid particles for circularity analysis")
-
-## ---NUCLEI DISTRIBUTION---
-
-# Create histogram of nuclei areas
-plt.figure(figsize=(12, 8))
-
-# Plot 1: Histogram of all particle areas
-plt.subplot(2, 2, 1)
-plt.hist(particle_areas, bins=30, alpha=0.7, color='skyblue', edgecolor='black')
-plt.axvline(x=MIN_SIZE_THRESHOLD, color='red', linestyle='--', label=f'Min Threshold: {MIN_SIZE_THRESHOLD}')
-plt.axvline(x=MAX_SIZE_THRESHOLD, color='orange', linestyle='--', label=f'Max Threshold: {MAX_SIZE_THRESHOLD}')
-plt.xlabel('Area (pixels)')
-plt.ylabel('Frequency')
-plt.title('Distribution of All Object Areas')
-plt.legend()
-plt.grid(True, alpha=0.3)
-
-# Plot 2: Histogram of large particles only (filtered)
-large_particle_areas = [cv2.contourArea(cnt) for cnt in large_particles]
-plt.subplot(2, 2, 2)
-if large_particle_areas:
-    plt.hist(large_particle_areas, bins=20, alpha=0.7, color='lightgreen', edgecolor='black')
-    plt.xlabel('Area (pixels)')
-    plt.ylabel('Frequency')
-    plt.title(f'Distribution of Acceptable Nuclei Areas\n({len(large_particle_areas)} particles)')
-    plt.grid(True, alpha=0.3)
-else:
-    plt.text(0.5, 0.5, 'No large particles found', ha='center', va='center', transform=plt.gca().transAxes)
-    plt.title('Distribution of Acceptable Nuclei Areas')
-
-# Plot 3: Box plot of particle areas
-plt.subplot(2, 2, 3)
-if particle_areas:
-    plt.boxplot(particle_areas, vert=True)
-    plt.ylabel('Area (pixels)')
-    plt.title('Box Plot of Nuclei Areas')
-    # Add some statistics as text
-    stats_text = f'Min: {np.min(particle_areas):.0f}\nMax: {np.max(particle_areas):.0f}\nMedian: {np.median(particle_areas):.0f}\nMean: {np.mean(particle_areas):.0f}'
-    plt.text(0.7, 0.95, stats_text, transform=plt.gca().transAxes, bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8))
-else:
-    plt.text(0.5, 0.5, 'No particles found', ha='center', va='center', transform=plt.gca().transAxes)
-    plt.title('Box Plot of Nuclei Areas')
-
-# Plot 4: Area vs Circularity scatter plot (if you have both metrics)
-plt.subplot(2, 2, 4)
-if particle_areas and circularities:
-    # Make sure we're comparing the same number of particles
-    min_length = min(len(particle_areas), len(circularities))
-    areas_for_plot = particle_areas[:min_length]
-    circularities_for_plot = circularities[:min_length]
-    
-    plt.scatter(areas_for_plot, circularities_for_plot, alpha=0.6, color='purple')
-    plt.xlabel('Area (pixels)')
-    plt.ylabel('Circularity')
-    plt.title('Area vs Circularity')
-    plt.grid(True, alpha=0.3)
-    
-    # Add correlation coefficient
-    correlation = np.corrcoef(areas_for_plot, circularities_for_plot)[0, 1]
-    plt.text(0.05, 0.95, f'Correlation: {correlation:.3f}', transform=plt.gca().transAxes, 
-             bbox=dict(boxstyle="round,pad=0.3", facecolor="white", alpha=0.8))
-else:
-    plt.text(0.5, 0.5, 'No data for scatter plot', ha='center', va='center', transform=plt.gca().transAxes)
-    plt.title('Area vs Circularity')
-
-plt.tight_layout()
-plt.show()
-
-# Print area statistics
-print("\n=== AREA ANALYSIS ===")
-if particle_areas:
-    print(f"Total particles detected: {len(particle_areas)}")
-    print(f"Large particles (size filtered): {num_large_particles}")
-    print(f"Area statistics (all particles):")
-    print(f"  Minimum area: {np.min(particle_areas):.2f} pixels")
-    print(f"  Maximum area: {np.max(particle_areas):.2f} pixels")
-    print(f"  Mean area: {np.mean(particle_areas):.2f} pixels")
-    print(f"  Median area: {np.median(particle_areas):.2f} pixels")
-    print(f"  Standard deviation: {np.std(particle_areas):.2f} pixels")
-    
-    if large_particle_areas:
-        print(f"\nArea statistics (large particles only):")
-        print(f"  Minimum area: {np.min(large_particle_areas):.2f} pixels")
-        print(f"  Maximum area: {np.max(large_particle_areas):.2f} pixels")
-        print(f"  Mean area: {np.mean(large_particle_areas):.2f} pixels")
-        print(f"  Median area: {np.median(large_particle_areas):.2f} pixels")
-else:
-    print("No particles found for area analysis")
-
-    
-# Create visualisation with large particles coloured differently
-size_filtered_image = cv2.cvtColor(final_binary, cv2.COLOR_GRAY2BGR)
-for i, cnt in enumerate(contours_final):
-    area = cv2.contourArea(cnt)
-    perimeter = cv2.arcLength(cnt,True)
-    circularity = (4 * np.pi * area) / (perimeter ** 2)
-    M = cv2.moments(cnt)
-    if M["m00"] != 0:
-        cx = int(M["m10"] / M["m00"])
-        cy = int(M["m01"] / M["m00"])
+        """Create Maximum Intensity Projection from Z-stack images"""
+        # Look for PNG files in the nuclei subfolders
+        image_files = glob.glob(os.path.join(folder_path, "**", "nuclei", "*.png"), recursive=True)
         
-        # Colour code based on size: red for large, yellow for small
-        if area >= MIN_SIZE_THRESHOLD and area <= MAX_SIZE_THRESHOLD and circularity >= 0.01:
-            color = (0, 0, 255)  # Red for particles within size range
-            cv2.putText(size_filtered_image, f"{i+1}({int(area)})", (cx-15, cy), 
-               cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1)
+        if not image_files:
+            raise ValueError(f"No PNG files found in nuclei subfolders of {folder_path}")
+        
+        print(f"Found {len(image_files)} images for MIP creation")
+        
+        # Get parent folder name for naming
+        parent_folder_name = os.path.basename(os.path.normpath(folder_path))
+
+        
+        # Read all images and stack them
+        z_stack = []
+        for img_file in sorted(image_files):
+            img = cv2.imread(img_file, cv2.IMREAD_GRAYSCALE)
+            if img is not None:
+                z_stack.append(img)
+            else:
+                print(f"Warning: Could not load {os.path.basename(img_file)}")
+        
+        if not z_stack:
+            raise ValueError("No valid images could be loaded for MIP creation")
+        
+        # Create Maximum Intensity Projection
+        mip = np.max(z_stack, axis=0)
+        
+        # Convert to 8-bit
+        mip = cv2.normalize(mip, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+        
+        # Save MIP
+        mip_path = os.path.join(self.output_folder, f"{parent_folder_name}_mip.png")
+        cv2.imwrite(mip_path, mip)
+        print(f"MIP saved to {mip_path}")
+        
+        # Convert to 3-channel for compatibility with existing code
+        self.image = cv2.cvtColor(mip, cv2.COLOR_GRAY2BGR)
+        
+        return mip_path
+
+    def load_single_image(self):
+        """Load a single image (original functionality)"""
+        self.image = cv2.imread(self.image_path, cv2.IMREAD_COLOR)
+        if self.image is None:
+            raise ValueError(f"Failed to load image: {self.image_path}")
+
+    def preprocess(self):
+        # Convert to greyscale and otsu threshold
+        grey = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
+        _, binary = cv2.threshold(grey, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+        binary_cleaned = cv2.fastNlMeansDenoising(binary)
+        
+        return binary_cleaned
+        
+    
+    def detect_nuclei(self):
+        # Filter out nuclei of acceptable size
+        binary_cleaned = self.preprocess()
+
+        # Find them nuclei
+        contours, _ = cv2.findContours(binary_cleaned, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        MIN_CONTOUR_AREA = 20
+        filtered_contours = []
+
+        for cnt in contours:
+            if cv2.contourArea(cnt) > MIN_CONTOUR_AREA:
+                filtered_contours.append(cnt)
+
+        final_binary = np.zeros_like(binary_cleaned)
+        for cnt in filtered_contours:
+            cv2.drawContours(final_binary, [cnt], -1, 255, -1)
+
+        contours_final, _ = cv2.findContours(final_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        MIN_SIZE_THRESHOLD = 450
+        MAX_SIZE_THRESHOLD = 10000
+
+        self.nuclei_count = []
+        self.nuclei_prop = []
+
+        for i, contour in enumerate(contours_final):
+            area = cv2.contourArea(contour)
+
+            # Calculate circularity 
+            perimeter = cv2.arcLength(contour, True)
+            if perimeter > 0 and area > 0:
+                circularity = (4 * np.pi * area) / (perimeter ** 2)
+            else:
+                circularity = 0
+            
+            # Filter by size and circularity 
+            if (area >= MIN_SIZE_THRESHOLD and area <= MAX_SIZE_THRESHOLD 
+                and circularity >= 0.01):
+                
+                self.nuclei_count.append(contour)
+                
+                # Calculate centroid 
+                moments = cv2.moments(contour)
+                if moments["m00"] != 0:
+                    xc = int(moments["m10"] / moments["m00"])
+                    yc = int(moments["m01"] / moments["m00"])
+                else:
+                    xc, yc = 0, 0
+                
+                # Store properties
+                properties = {
+                    "nuclei_id": i,
+                    "x_c": xc,
+                    "y_c": yc,
+                    "area": float(area),
+                    "circularity": float(circularity)
+                }
+                self.nuclei_prop.append(properties)
+
+        # Get parent folder name for naming
+        if os.path.isdir(self.image_path):
+            parent_folder_name = os.path.basename(os.path.normpath(self.image_path))
         else:
-            color = (0, 255, 255)  # Yellow for particles outside size and circularity range
-            cv2.putText(size_filtered_image, f"{i+1}", (cx-5, cy), 
-               cv2.FONT_HERSHEY_SIMPLEX, 0.3, color, 1)
+            parent_folder_name = os.path.splitext(os.path.basename(self.image_path))[0]
+
+        # Save properties to JSON
+        json_path = os.path.join(self.output_folder, f"{parent_folder_name}_nuclei_props.json")
+        with open(json_path, 'w') as json_file:
+            json.dump(self.nuclei_prop, json_file, indent = 4)
+        print(f"Detected {len(self.nuclei_count)} nuclei")
+        print(f"Nuclei properties saved to {json_path}")
         
-        cv2.drawContours(size_filtered_image, [cnt], -1, color, 1)
+        return len(self.nuclei_count) > 0
+        
+    def visualise(self):
+        if not self.nuclei_count:
+            return
+            
+        vis_image = self.image.copy()
 
-# Save 
+        for i, (contour, properties) in enumerate(zip(self.nuclei_count, self.nuclei_prop)):
+            # Draw contour
+            cv2.drawContours(vis_image, [contour], -1, (0, 255, 0), 2)
+                
+            # Draw centroid
+            xc = properties["x_c"]
+            yc = properties["y_c"]
+            cv2.circle(vis_image, (xc, yc), 5, (255, 0, 0), -1)
+                
+            # Add number label
+            cv2.putText(vis_image, str(i), (xc + 10, yc), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
-cv2.imwrite('NucleiCount.png', size_filtered_image)
+    def process(self):
+        # Check if input is a folder (Z-stack) or single image
+        if os.path.isdir(self.image_path):
+            print("Z-stack folder detected, creating MIP...")
+            self.mip(self.image_path)
+        else:
+            print("Single image detected, loading directly...")
+            self.load_single_image()
 
+        if not self.detect_nuclei():
+            messagebox.showinfo("No Nuclei", "No nuclei of acceptable size were detected in the image.")
+            return False
+        
+        self.visualise()
+        return True
+    
+if __name__ == "__main__":
+    root = Tk()
+    root.withdraw()
 
-
-# Display 
-plt.figure(figsize=(20, 5))
-
-plt.subplot(1, 2, 1)
-plt.imshow(binary_image, cmap='gray')
-plt.title('Original Otsu Binary')
-plt.axis('off')
-
-plt.subplot(1, 2, 2)
-plt.imshow(cv2.cvtColor(size_filtered_image, cv2.COLOR_BGR2RGB))
-plt.title(f'Cleaned Binary\n{num_large_particles} particles detected')
-plt.axis('off')
-
-"""plt.subplot(1, 3, 3)
-plt.imshow(cv2.cvtColor(size_filtered_image, cv2.COLOR_BGR2RGB))
-plt.title('Particles Numbered')
-plt.axis('off')"""
-
-"""plt.subplot(1, 4, 4)
-plt.hist(mip_gray.ravel(), 256, [0,256])
-plt.axvline(x=otsu_threshold, color='r', linestyle='--', label=f'Otsu Threshold: {otsu_threshold}')
-plt.title('Histogram & Threshold')
-plt.legend()"""
-
-plt.tight_layout()
-plt.show()
+    # Ask user if they want to analyze a single image or a Z-stack folder
+    choice = messagebox.askquestion("Input Type", 
+                                   "Do you want to analyse a single image?\n\n"
+                                   "Click 'Yes' for single image\n"
+                                   "Click 'No' for Z-stack folder")
+    
+    if choice == 'yes':
+        image_path = filedialog.askopenfilename(
+            title="Select Nuclei Image",
+            filetypes=[("Image files", "*.png *.jpg *.jpeg *.tif *.tiff"), ("All files", "*.*")]
+        )
+    else:
+        image_path = filedialog.askdirectory(title="Select Z-stack Folder")
+    
+    if not image_path:
+        messagebox.showerror("Error", "Please select an image file or folder.")
+        exit()
+    
+    output_folder = filedialog.askdirectory(title="Select Output Directory")
+    if not output_folder:
+        messagebox.showerror("Error", "Please select an output directory.")
+        exit()
+    
+    try:
+        analyser = NucleiAnalyser(image_path, output_folder)
+        success = analyser.process()
+        
+        if success:
+            messagebox.showinfo("Success", f"Analysis completed! Found {len(analyser.nuclei_count)} large nuclei.")
+        
+            # Print summary of stored properties
+            print("\n=== STORED NUCLEI PROPERTIES ===")
+            for prop in analyser.nuclei_prop:
+                print(f"Nuclei {prop['nuclei_id']}: Centre({prop['x_c']}, {prop['y_c']}), "f"Area: {prop['area']:.2f}, Circularity: {prop['circularity']:.3f}")
+        
+        else:
+            messagebox.showwarning("Warning", "Analysis completed with issues.")
+    
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred: {str(e)}")
+    
+    root.destroy()

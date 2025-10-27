@@ -1,0 +1,1091 @@
+[
+  {
+    "cell_id": 0,
+    "image_filename": "box_0.png",
+    "center_coordinates": {
+      "x": 54,
+      "y": 88
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 1,
+    "image_filename": "box_1.png",
+    "center_coordinates": {
+      "x": 186,
+      "y": 89
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 106,
+    "image_filename": "box_106.png",
+    "center_coordinates": {
+      "x": 193,
+      "y": 1014
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 107,
+    "image_filename": "box_107.png",
+    "center_coordinates": {
+      "x": 325,
+      "y": 1014
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 108,
+    "image_filename": "box_108.png",
+    "center_coordinates": {
+      "x": 457,
+      "y": 1015
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 109,
+    "image_filename": "box_109.png",
+    "center_coordinates": {
+      "x": 589,
+      "y": 1016
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 11,
+    "image_filename": "box_11.png",
+    "center_coordinates": {
+      "x": 1512,
+      "y": 97
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 110,
+    "image_filename": "box_110.png",
+    "center_coordinates": {
+      "x": 722,
+      "y": 1016
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 111,
+    "image_filename": "box_111.png",
+    "center_coordinates": {
+      "x": 855,
+      "y": 1017
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 112,
+    "image_filename": "box_112.png",
+    "center_coordinates": {
+      "x": 987,
+      "y": 1018
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 115,
+    "image_filename": "box_115.png",
+    "center_coordinates": {
+      "x": 1385,
+      "y": 1020
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 116,
+    "image_filename": "box_116.png",
+    "center_coordinates": {
+      "x": 1517,
+      "y": 1021
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 117,
+    "image_filename": "box_117.png",
+    "center_coordinates": {
+      "x": 1650,
+      "y": 1022
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 118,
+    "image_filename": "box_118.png",
+    "center_coordinates": {
+      "x": 1783,
+      "y": 1023
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 119,
+    "image_filename": "box_119.png",
+    "center_coordinates": {
+      "x": 1915,
+      "y": 1023
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 12,
+    "image_filename": "box_12.png",
+    "center_coordinates": {
+      "x": 1644,
+      "y": 99
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 123,
+    "image_filename": "box_123.png",
+    "center_coordinates": {
+      "x": 458,
+      "y": 1148
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 124,
+    "image_filename": "box_124.png",
+    "center_coordinates": {
+      "x": 590,
+      "y": 1148
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 126,
+    "image_filename": "box_126.png",
+    "center_coordinates": {
+      "x": 856,
+      "y": 1150
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 127,
+    "image_filename": "box_127.png",
+    "center_coordinates": {
+      "x": 988,
+      "y": 1150
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 129,
+    "image_filename": "box_129.png",
+    "center_coordinates": {
+      "x": 1253,
+      "y": 1152
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 13,
+    "image_filename": "box_13.png",
+    "center_coordinates": {
+      "x": 1777,
+      "y": 99
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 130,
+    "image_filename": "box_130.png",
+    "center_coordinates": {
+      "x": 1386,
+      "y": 1153
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 132,
+    "image_filename": "box_132.png",
+    "center_coordinates": {
+      "x": 1651,
+      "y": 1154
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 133,
+    "image_filename": "box_133.png",
+    "center_coordinates": {
+      "x": 1783,
+      "y": 1155
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 134,
+    "image_filename": "box_134.png",
+    "center_coordinates": {
+      "x": 1915,
+      "y": 1156
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 137,
+    "image_filename": "box_137.png",
+    "center_coordinates": {
+      "x": 327,
+      "y": 1279
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 138,
+    "image_filename": "box_138.png",
+    "center_coordinates": {
+      "x": 460,
+      "y": 1280
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 139,
+    "image_filename": "box_139.png",
+    "center_coordinates": {
+      "x": 591,
+      "y": 1281
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 14,
+    "image_filename": "box_14.png",
+    "center_coordinates": {
+      "x": 1909,
+      "y": 101
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 140,
+    "image_filename": "box_140.png",
+    "center_coordinates": {
+      "x": 724,
+      "y": 1281
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 141,
+    "image_filename": "box_141.png",
+    "center_coordinates": {
+      "x": 856,
+      "y": 1282
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 142,
+    "image_filename": "box_142.png",
+    "center_coordinates": {
+      "x": 989,
+      "y": 1283
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 144,
+    "image_filename": "box_144.png",
+    "center_coordinates": {
+      "x": 1254,
+      "y": 1284
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 147,
+    "image_filename": "box_147.png",
+    "center_coordinates": {
+      "x": 1652,
+      "y": 1286
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 148,
+    "image_filename": "box_148.png",
+    "center_coordinates": {
+      "x": 1784,
+      "y": 1287
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 149,
+    "image_filename": "box_149.png",
+    "center_coordinates": {
+      "x": 1916,
+      "y": 1288
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 15,
+    "image_filename": "box_15.png",
+    "center_coordinates": {
+      "x": 55,
+      "y": 220
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 151,
+    "image_filename": "box_151.png",
+    "center_coordinates": {
+      "x": 196,
+      "y": 1411
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 152,
+    "image_filename": "box_152.png",
+    "center_coordinates": {
+      "x": 329,
+      "y": 1412
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 153,
+    "image_filename": "box_153.png",
+    "center_coordinates": {
+      "x": 459,
+      "y": 1413
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 154,
+    "image_filename": "box_154.png",
+    "center_coordinates": {
+      "x": 592,
+      "y": 1413
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 16,
+    "image_filename": "box_16.png",
+    "center_coordinates": {
+      "x": 187,
+      "y": 221
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 162,
+    "image_filename": "box_162.png",
+    "center_coordinates": {
+      "x": 1653,
+      "y": 1418
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 163,
+    "image_filename": "box_163.png",
+    "center_coordinates": {
+      "x": 1785,
+      "y": 1419
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 164,
+    "image_filename": "box_164.png",
+    "center_coordinates": {
+      "x": 1918,
+      "y": 1419
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 165,
+    "image_filename": "box_165.png",
+    "center_coordinates": {
+      "x": 65,
+      "y": 1542
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 166,
+    "image_filename": "box_166.png",
+    "center_coordinates": {
+      "x": 197,
+      "y": 1543
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 167,
+    "image_filename": "box_167.png",
+    "center_coordinates": {
+      "x": 329,
+      "y": 1543
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 168,
+    "image_filename": "box_168.png",
+    "center_coordinates": {
+      "x": 462,
+      "y": 1544
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 17,
+    "image_filename": "box_17.png",
+    "center_coordinates": {
+      "x": 319,
+      "y": 221
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 173,
+    "image_filename": "box_173.png",
+    "center_coordinates": {
+      "x": 1123,
+      "y": 1548
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 174,
+    "image_filename": "box_174.png",
+    "center_coordinates": {
+      "x": 1256,
+      "y": 1549
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 181,
+    "image_filename": "box_181.png",
+    "center_coordinates": {
+      "x": 198,
+      "y": 1675
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 182,
+    "image_filename": "box_182.png",
+    "center_coordinates": {
+      "x": 330,
+      "y": 1676
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 183,
+    "image_filename": "box_183.png",
+    "center_coordinates": {
+      "x": 462,
+      "y": 1677
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 184,
+    "image_filename": "box_184.png",
+    "center_coordinates": {
+      "x": 595,
+      "y": 1678
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 185,
+    "image_filename": "box_185.png",
+    "center_coordinates": {
+      "x": 726,
+      "y": 1678
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 186,
+    "image_filename": "box_186.png",
+    "center_coordinates": {
+      "x": 1126,
+      "y": 1678
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 189,
+    "image_filename": "box_189.png",
+    "center_coordinates": {
+      "x": 1256,
+      "y": 1681
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 19,
+    "image_filename": "box_19.png",
+    "center_coordinates": {
+      "x": 584,
+      "y": 223
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 195,
+    "image_filename": "box_195.png",
+    "center_coordinates": {
+      "x": 67,
+      "y": 1806
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 196,
+    "image_filename": "box_196.png",
+    "center_coordinates": {
+      "x": 199,
+      "y": 1807
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 197,
+    "image_filename": "box_197.png",
+    "center_coordinates": {
+      "x": 330,
+      "y": 1808
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 198,
+    "image_filename": "box_198.png",
+    "center_coordinates": {
+      "x": 463,
+      "y": 1809
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 20,
+    "image_filename": "box_20.png",
+    "center_coordinates": {
+      "x": 716,
+      "y": 223
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 203,
+    "image_filename": "box_203.png",
+    "center_coordinates": {
+      "x": 1125,
+      "y": 1812
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 206,
+    "image_filename": "box_206.png",
+    "center_coordinates": {
+      "x": 1523,
+      "y": 1814
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 208,
+    "image_filename": "box_208.png",
+    "center_coordinates": {
+      "x": 1787,
+      "y": 1815
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 209,
+    "image_filename": "box_209.png",
+    "center_coordinates": {
+      "x": 1919,
+      "y": 1815
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 210,
+    "image_filename": "box_210.png",
+    "center_coordinates": {
+      "x": 199,
+      "y": 1939
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 211,
+    "image_filename": "box_211.png",
+    "center_coordinates": {
+      "x": 332,
+      "y": 1939
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 213,
+    "image_filename": "box_213.png",
+    "center_coordinates": {
+      "x": 597,
+      "y": 1942
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 25,
+    "image_filename": "box_25.png",
+    "center_coordinates": {
+      "x": 1380,
+      "y": 228
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 26,
+    "image_filename": "box_26.png",
+    "center_coordinates": {
+      "x": 1513,
+      "y": 229
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 27,
+    "image_filename": "box_27.png",
+    "center_coordinates": {
+      "x": 1645,
+      "y": 230
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 28,
+    "image_filename": "box_28.png",
+    "center_coordinates": {
+      "x": 1778,
+      "y": 232
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 3,
+    "image_filename": "box_3.png",
+    "center_coordinates": {
+      "x": 319,
+      "y": 90
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 30,
+    "image_filename": "box_30.png",
+    "center_coordinates": {
+      "x": 56,
+      "y": 352
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 31,
+    "image_filename": "box_31.png",
+    "center_coordinates": {
+      "x": 188,
+      "y": 353
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 32,
+    "image_filename": "box_32.png",
+    "center_coordinates": {
+      "x": 320,
+      "y": 354
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 33,
+    "image_filename": "box_33.png",
+    "center_coordinates": {
+      "x": 453,
+      "y": 354
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 34,
+    "image_filename": "box_34.png",
+    "center_coordinates": {
+      "x": 585,
+      "y": 355
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 35,
+    "image_filename": "box_35.png",
+    "center_coordinates": {
+      "x": 717,
+      "y": 355
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 36,
+    "image_filename": "box_36.png",
+    "center_coordinates": {
+      "x": 850,
+      "y": 356
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 37,
+    "image_filename": "box_37.png",
+    "center_coordinates": {
+      "x": 983,
+      "y": 357
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 42,
+    "image_filename": "box_42.png",
+    "center_coordinates": {
+      "x": 1646,
+      "y": 362
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 43,
+    "image_filename": "box_43.png",
+    "center_coordinates": {
+      "x": 1779,
+      "y": 364
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 45,
+    "image_filename": "box_45.png",
+    "center_coordinates": {
+      "x": 57,
+      "y": 484
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 46,
+    "image_filename": "box_46.png",
+    "center_coordinates": {
+      "x": 189,
+      "y": 485
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 48,
+    "image_filename": "box_48.png",
+    "center_coordinates": {
+      "x": 453,
+      "y": 487
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 50,
+    "image_filename": "box_50.png",
+    "center_coordinates": {
+      "x": 719,
+      "y": 488
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 51,
+    "image_filename": "box_51.png",
+    "center_coordinates": {
+      "x": 851,
+      "y": 489
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 52,
+    "image_filename": "box_52.png",
+    "center_coordinates": {
+      "x": 984,
+      "y": 490
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 54,
+    "image_filename": "box_54.png",
+    "center_coordinates": {
+      "x": 1249,
+      "y": 492
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 58,
+    "image_filename": "box_58.png",
+    "center_coordinates": {
+      "x": 1779,
+      "y": 495
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 59,
+    "image_filename": "box_59.png",
+    "center_coordinates": {
+      "x": 1911,
+      "y": 497
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 60,
+    "image_filename": "box_60.png",
+    "center_coordinates": {
+      "x": 58,
+      "y": 617
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 61,
+    "image_filename": "box_61.png",
+    "center_coordinates": {
+      "x": 190,
+      "y": 617
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 62,
+    "image_filename": "box_62.png",
+    "center_coordinates": {
+      "x": 322,
+      "y": 618
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 63,
+    "image_filename": "box_63.png",
+    "center_coordinates": {
+      "x": 454,
+      "y": 619
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 64,
+    "image_filename": "box_64.png",
+    "center_coordinates": {
+      "x": 587,
+      "y": 620
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 65,
+    "image_filename": "box_65.png",
+    "center_coordinates": {
+      "x": 719,
+      "y": 620
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 66,
+    "image_filename": "box_66.png",
+    "center_coordinates": {
+      "x": 852,
+      "y": 621
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 68,
+    "image_filename": "box_68.png",
+    "center_coordinates": {
+      "x": 1117,
+      "y": 623
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 69,
+    "image_filename": "box_69.png",
+    "center_coordinates": {
+      "x": 1250,
+      "y": 624
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 7,
+    "image_filename": "box_7.png",
+    "center_coordinates": {
+      "x": 980,
+      "y": 93
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 75,
+    "image_filename": "box_75.png",
+    "center_coordinates": {
+      "x": 59,
+      "y": 749
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 76,
+    "image_filename": "box_76.png",
+    "center_coordinates": {
+      "x": 191,
+      "y": 750
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 77,
+    "image_filename": "box_77.png",
+    "center_coordinates": {
+      "x": 323,
+      "y": 750
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 78,
+    "image_filename": "box_78.png",
+    "center_coordinates": {
+      "x": 456,
+      "y": 751
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 79,
+    "image_filename": "box_79.png",
+    "center_coordinates": {
+      "x": 588,
+      "y": 752
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 82,
+    "image_filename": "box_82.png",
+    "center_coordinates": {
+      "x": 986,
+      "y": 754
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 83,
+    "image_filename": "box_83.png",
+    "center_coordinates": {
+      "x": 1119,
+      "y": 755
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 92,
+    "image_filename": "box_92.png",
+    "center_coordinates": {
+      "x": 324,
+      "y": 882
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 93,
+    "image_filename": "box_93.png",
+    "center_coordinates": {
+      "x": 456,
+      "y": 883
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 94,
+    "image_filename": "box_94.png",
+    "center_coordinates": {
+      "x": 589,
+      "y": 883
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 95,
+    "image_filename": "box_95.png",
+    "center_coordinates": {
+      "x": 721,
+      "y": 884
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 96,
+    "image_filename": "box_96.png",
+    "center_coordinates": {
+      "x": 853,
+      "y": 885
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 97,
+    "image_filename": "box_97.png",
+    "center_coordinates": {
+      "x": 986,
+      "y": 885
+    },
+    "predicted_class": 3
+  },
+  {
+    "cell_id": 98,
+    "image_filename": "box_98.png",
+    "center_coordinates": {
+      "x": 1119,
+      "y": 886
+    },
+    "predicted_class": 3
+  }
+]
