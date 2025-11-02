@@ -8,6 +8,7 @@ from readlif.reader import LifFile
 import numpy as np
 from matplotlib import pyplot
 import matplotlib.colors as mcolors
+import re
 
 class LIFProcessor:
     """Class to process LIF files and extract images as PNGs"""
@@ -16,6 +17,16 @@ class LIFProcessor:
         self.channel_names = {0: "nuclei", 1: "mbp", 2: "pillar"}
         self.yellow_cmap = mcolors.LinearSegmentedColormap.from_list('yellow_cmap', ['black', 'yellow'])
         self.cyan_cmap = mcolors.LinearSegmentedColormap.from_list('cyan_cmap', ['black', 'cyan'])
+    
+    def clean_filename(self, filename):
+        """Clean filename by removing or replacing invalid characters"""
+        # Remove trailing spaces
+        filename = filename.strip()
+        # Replace invalid characters with underscores
+        filename = re.sub(r'[<>:"/\\|?*]', '_', filename)
+        # Replace multiple spaces with single space
+        filename = re.sub(r'\s+', ' ', filename)
+        return filename
     
     def browse_lif_file(self):
         """Open file dialog to browse for LIF files"""
@@ -37,6 +48,7 @@ class LIFProcessor:
             lif_file = LifFile(lif_file_path)
 
             base_name = os.path.splitext(os.path.basename(lif_file_path))[0]
+            base_name = self.clean_filename(base_name)
             output_dir = f'./{base_name}_extracted_pngs'
             os.makedirs(output_dir, exist_ok=True)
 
@@ -44,7 +56,7 @@ class LIFProcessor:
             print(f"Found {len(all_images)} images in LIF file")
 
             for img_index, lif_image in enumerate(all_images):
-                series_name = lif_image.name
+                series_name = self.clean_filename(lif_image.name)
                 print(f"Processing image {img_index + 1}/{len(all_images)}: {series_name}")
                 dims = lif_image.dims
                 print(f"  Dimensions: {dims}")
@@ -89,6 +101,7 @@ class LIFProcessor:
                                 # Determine channel directory with series subfolder and filename
                                 channel_dir = os.path.join(output_dir, series_name, self.channel_names[channel])
                                 filename = f'{series_name}_c{channel}_{channel_name}_z{z}_t{t}.png'
+                                filename = self.clean_filename(filename)
                                 filepath = os.path.join(channel_dir, filename)
 
                                 img.save(filepath, format='PNG')
