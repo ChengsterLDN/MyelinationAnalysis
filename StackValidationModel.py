@@ -9,12 +9,12 @@ import evaluate
 # Set device to GPU if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-dataset = load_dataset("imagefolder", data_dir = "C:\\Users\\jonat\\Myelination\\PillarValidationDataset")
+dataset = load_dataset("imagefolder", data_dir = "C:\\Users\\jonat\\Documents\\GitHub\\MyelinationAnalysis\\MBPValidationDataset")
 
 # Load Pretrained ViT model and processor
 
 processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224-in21k")
-model = ViTForImageClassification.from_pretrained("google/vit-base-patch16-224-in21k",
+model = ViTForImageClassification.from_pretrained("./StackValidationv1.0/checkpoint-135",
                                                 num_labels=2,  # valid, invalid
                                                 ignore_mismatched_sizes=True)
 
@@ -48,7 +48,7 @@ def compute_metrics(eval_pred):
 
 # Training setup (simplified)
 training_args = TrainingArguments(
-    output_dir="./PillarValidationv1.0",
+    output_dir="./StackValidationv1.0",
     per_device_train_batch_size=16,
     eval_strategy="epoch",
     num_train_epochs=3,
@@ -74,7 +74,5 @@ trainer = Trainer(
 trainer.train()
 #trainer.train(resume_from_checkpoint=True)
 
-#print(torch.cuda.memory_allocated(device)/1024**2, "MB")
-#print(torch.cuda.memory_reserved(device)/1024**2, "MB")
 
 
