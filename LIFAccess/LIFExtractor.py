@@ -76,8 +76,21 @@ class LIFProcessor:
                     if channel >= lif_image.channels:
                         print(f"  Channel {channel} not available (only {lif_image.channels} channels)")
                         continue
+                    
+                    # Print info for channel 1 about skipped slices
+                    if channel == 1:
+                        z_total = dims.z if hasattr(dims, 'z') else 1
+                        z_used = z_total - 2 if z_total > 2 else z_total
+                        print(f"  Processing channel {channel} (mbp) - using {z_used} of {z_total} z-slices")
+                    # For channel 1 (mbp), skip first and last z-slices
+                        z_start = 1  # Skip first slice (index 0)
+                        z_end = (dims.z if hasattr(dims, 'z') else 1) - 1  # Skip last slice
+                        z_range = range(z_start, z_end) if z_end > z_start else range(0, 1)
+                    else:
+                        # For other channels, use all z-slices
+                        z_range = range(dims.z if hasattr(dims, 'z') else 1)
 
-                    for z in range(dims.z if hasattr(dims, 'z') else 1):
+                    for z in z_range:
                         for t in range(dims.t if hasattr(dims, 't') else 1):
                             try:
                                 pil_image = lif_image.get_frame(t=t, z=z, c=channel)
