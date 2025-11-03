@@ -68,7 +68,7 @@ class StackValidator:
                 if predicted_class is not None:
                     class_name = self.class_labels.get(predicted_class, "unknown")
                     
-                    # Copy image to appropriate folder
+                    # Move image to appropriate folder
                     if class_name == "valid":
                         destination = os.path.join(valid_dir, img_file)
                         results["valid"] += 1
@@ -76,14 +76,14 @@ class StackValidator:
                         destination = os.path.join(invalid_dir, img_file)
                         results["invalid"] += 1
                     
-                    shutil.copy2(img_path, destination)
+                    shutil.move(img_path, destination)
                     processed_count += 1
                     
                     print(f"  {img_file}: {class_name} (confidence: {confidence:.3f})")
                 else:
                     # If prediction failed, move to invalid folder
                     destination = os.path.join(invalid_dir, img_file)
-                    shutil.copy2(img_path, destination)
+                    shutil.move(img_path, destination)
                     results["invalid"] += 1
                     print(f"  {img_file}: prediction failed - moved to invalid")
                     
@@ -92,7 +92,7 @@ class StackValidator:
                 # Move problematic files to invalid folder
                 try:
                     destination = os.path.join(invalid_dir, img_file)
-                    shutil.copy2(os.path.join(input_folder, img_file), destination)
+                    shutil.move(os.path.join(input_folder, img_file), destination)
                     results["invalid"] += 1
                 except:
                     pass
@@ -105,8 +105,8 @@ class StackValidator:
         print(f"Invalid images: {results['invalid']}")
         print(f"Total processed: {processed_count}/{len(png_files)}")
         print(f"Time elapsed: {processing_time:.2f} seconds")
-        print(f"Valid images saved to: {valid_dir}")
-        print(f"Invalid images saved to: {invalid_dir}")
+        print(f"Valid images moved to: {valid_dir}")
+        print(f"Invalid images moved to: {invalid_dir}")
         
         return results
 
@@ -154,7 +154,7 @@ class StackValidator:
                 f"Valid images: {results['valid']}\n"
                 f"Invalid images: {results['invalid']}\n"
                 f"Total processed: {results['total']}\n\n"
-                f"Images have been organised into 'valid' and 'invalid' folders."
+                f"Images have been moved into 'valid' and 'invalid' folders."
             )
             
         except Exception as e:
