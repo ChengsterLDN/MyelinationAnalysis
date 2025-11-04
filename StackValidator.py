@@ -34,35 +34,33 @@ class StackValidator:
             print(f"Error predicting image {image_path}: {str(e)}")
             return None, 0.0
 
-    def process_folder(self, input_folder):
-  
-        print(f"\nProcessing folder: {input_folder}")
+    def process_subfolder(self, subfolder_path, folder_type):
+        """Process a single subfolder (mbp or pillar)"""
+        print(f"  Processing {folder_type} folder: {subfolder_path}")
         
-        # Create output directories
-        valid_dir = os.path.join(input_folder, "valid")
-        invalid_dir = os.path.join(input_folder, "invalid")
+        # Create output directories within the subfolder
+        valid_dir = os.path.join(subfolder_path, "valid")
+        invalid_dir = os.path.join(subfolder_path, "invalid")
         os.makedirs(valid_dir, exist_ok=True)
         os.makedirs(invalid_dir, exist_ok=True)
         
-        # Get all PNG files
-        png_files = [f for f in os.listdir(input_folder) 
-                    if f.lower().endswith('.png') and os.path.isfile(os.path.join(input_folder, f))]
+        # Get all PNG files in the subfolder
+        png_files = [f for f in os.listdir(subfolder_path) 
+                    if f.lower().endswith('.png') and os.path.isfile(os.path.join(subfolder_path, f))]
         
         if not png_files:
-            print("No PNG files found in the selected folder.")
+            print(f"    No PNG files found in {folder_type} folder.")
             return {"valid": 0, "invalid": 0, "total": 0}
         
-        print(f"Found {len(png_files)} PNG files to process")
+        print(f"    Found {len(png_files)} PNG files to process")
         
         # Process images
         results = {"valid": 0, "invalid": 0, "total": len(png_files)}
         processed_count = 0
         
-        start_time = time.time()
-        
         for img_file in png_files:
             try:
-                img_path = os.path.join(input_folder, img_file)
+                img_path = os.path.join(subfolder_path, img_file)
                 predicted_class, confidence = self.predict_image(img_path)
                 
                 if predicted_class is not None:
@@ -79,46 +77,97 @@ class StackValidator:
                     shutil.move(img_path, destination)
                     processed_count += 1
                     
-                    print(f"  {img_file}: {class_name} (confidence: {confidence:.3f})")
+                    print(f"      {img_file}: {class_name} (confidence: {confidence:.3f})")
                 else:
                     # If prediction failed, move to invalid folder
                     destination = os.path.join(invalid_dir, img_file)
                     shutil.move(img_path, destination)
                     results["invalid"] += 1
-                    print(f"  {img_file}: prediction failed - moved to invalid")
+                    print(f"      {img_file}: prediction failed - moved to invalid")
                     
             except Exception as e:
-                print(f"Error processing {img_file}: {str(e)}")
+                print(f"    Error processing {img_file}: {str(e)}")
                 # Move problematic files to invalid folder
                 try:
                     destination = os.path.join(invalid_dir, img_file)
-                    shutil.move(os.path.join(input_folder, img_file), destination)
+                    shutil.move(os.path.join(subfolder_path, img_file), destination)
                     results["invalid"] += 1
                 except:
                     pass
         
+        print(f"    {folder_type} folder complete: {results['valid']} valid, {results['invalid']} invalid")
+        return results
+
+    def process_root_folder(self, parent_folder):
+        """Process the parent folder and find all mbp and pillar subfolders recursively"""
+        print(f"\nScanning parent folder: {parent_folder}")
+        
+        # Find all mbp and pillar folders recursively
+        target_folders = []
+        for root, dirs, files in os.walk(parent_folder):
+            for dir_name in dirs:
+                if dir_name.lower() in ["mbp", "pillar"]:
+                    folder_path = os.path.join(root, dir_name)
+                    target_folders.append((folder_path, dir_name))
+        
+        if not target_folders:
+            print("No 'mbp' or 'pillar' folders found in the selected directory or its subdirectories.")
+            return {"valid": 0, "invalid": 0, "total": 0, "folders_processed": 0}
+        
+        print(f"Found {len(target_folders)} target folders:")
+        for folder_path, folder_name in target_folders:
+            print(f"  - {folder_name}: {folder_path}")
+        
+        # Process each target folder
+        total_results = {"valid": 0, "invalid": 0, "total": 0, "folders_processed": len(target_folders)}
+        folder_details = {}
+        
+        start_time = time.time()
+        
+        for folder_path, folder_name in target_folders:
+            print(f"\n--- Processing {folder_name} at: {os.path.relpath(folder_path, parent_folder)} ---")
+            folder_results = self.process_subfolder(folder_path, folder_name)
+            
+            # Accumulate totals
+            total_results["valid"] += folder_results["valid"]
+            total_results["invalid"] += folder_results["invalid"]
+            total_results["total"] += folder_results["total"]
+            
+            # Store folder details with relative path for clarity
+            rel_path = os.path.relpath(folder_path, parent_folder)
+            folder_key = f"{folder_name} ({rel_path})"
+            folder_details[folder_key] = folder_results
+        
         end_time = time.time()
         processing_time = end_time - start_time
         
-        print(f"\nProcessing complete!")
-        print(f"Valid images: {results['valid']}")
-        print(f"Invalid images: {results['invalid']}")
-        print(f"Total processed: {processed_count}/{len(png_files)}")
+        # Print summary
+        print(f"\n{'='*50}")
+        print("PROCESSING COMPLETE!")
+        print(f"{'='*50}")
+        print(f"Parent folder: {parent_folder}")
+        print(f"Target folders processed: {total_results['folders_processed']}")
+        print(f"Total valid images: {total_results['valid']}")
+        print(f"Total invalid images: {total_results['invalid']}")
+        print(f"Total images processed: {total_results['total']}")
         print(f"Time elapsed: {processing_time:.2f} seconds")
-        print(f"Valid images moved to: {valid_dir}")
-        print(f"Invalid images moved to: {invalid_dir}")
         
-        return results
+        # Print per-folder breakdown
+        print(f"\nFolder breakdown:")
+        for folder_name, results in folder_details.items():
+            print(f"  {folder_name}: {results['valid']} valid, {results['invalid']} invalid")
+        
+        return total_results
 
     def run_validation(self):
         root = Tk()
         root.withdraw()
         
-        # Ask user for input folder
-        print("Please select the folder containing PNG images to validate...")
-        input_folder = filedialog.askdirectory(title="Select Folder with PNG Images")
-        if not input_folder:
-            messagebox.showerror("Error", "Please select a folder containing PNG images.")
+        # Ask user for parent folder
+        print("Please select the parent folder containing 'mbp' and 'pillar' subfolders...")
+        parent_folder = filedialog.askdirectory(title="Select Parent Folder with mbp and pillar subfolders")
+        if not parent_folder:
+            messagebox.showerror("Error", "Please select a parent folder containing 'mbp' and 'pillar' subfolders.")
             root.destroy()
             return
         
@@ -145,16 +194,19 @@ class StackValidator:
         
         # Run validation
         try:
-            results = self.process_folder(input_folder)
+            results = self.process_root_folder(parent_folder)
             
             # Show results summary
             messagebox.showinfo(
                 "Validation Complete", 
                 f"Image validation completed!\n\n"
-                f"Valid images: {results['valid']}\n"
-                f"Invalid images: {results['invalid']}\n"
-                f"Total processed: {results['total']}\n\n"
-                f"Images have been moved into 'valid' and 'invalid' folders."
+                f"Parent folder processed: {os.path.basename(parent_folder)}\n"
+                f"Target folders processed: {results['folders_processed']}\n"
+                f"Total valid images: {results['valid']}\n"
+                f"Total invalid images: {results['invalid']}\n"
+                f"Total images processed: {results['total']}\n\n"
+                f"Images have been moved into 'valid' and 'invalid' subfolders\n"
+                f"within each found 'mbp' and 'pillar' folder."
             )
             
         except Exception as e:
