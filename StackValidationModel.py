@@ -14,7 +14,7 @@ dataset = load_dataset("imagefolder", data_dir = "C:\\Users\\jonat\\Documents\\G
 # Load Pretrained ViT model and processor
 
 processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224-in21k")
-model = ViTForImageClassification.from_pretrained("./StackValidationv1.0/checkpoint-135",
+model = ViTForImageClassification.from_pretrained("./StackValidationv1.0/MBPRun",
                                                 num_labels=2,  # valid, invalid
                                                 ignore_mismatched_sizes=True)
 

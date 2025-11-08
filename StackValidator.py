@@ -217,7 +217,6 @@ class StackValidator:
 
 if __name__ == "__main__":
     try:
-        # Initialize without a model path - user must select one
         validator = StackValidator(None)
         validator.run_validation()
 
