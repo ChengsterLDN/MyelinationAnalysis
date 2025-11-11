@@ -80,39 +80,47 @@ class PillarNucleiAnalyser:
         return math.sqrt((point1['x'] - point2['x_c'])**2 + (point1['y'] - point2['y_c'])**2)
     
     def analyse_space(self, search_radius=50):
-        """Analyse within search radius for all merged data"""
+        """Analyse within search radius for all merged data, with each nucleus assigned only to its closest pillar"""
         self.analysis_results = []
-        
+
+        # Initialize results for each pillar
         for pillar in self.wrapped_pillars:
-            pillar_coords = pillar['center_coordinates']
-            prox_nuclei = []
-            
-            for nucleus in self.nuclei_properties:
-                distance = self.calculate_distance(pillar_coords, nucleus)
-                
-                if distance <= search_radius:
-                    prox_nuclei.append({
-                        'nuclei_id': nucleus['nuclei_id'],
-                        'distance': distance,
-                        'area': nucleus['area'],
-                        'circularity': nucleus.get('circularity', 0),
-                        'original_nuclei_id': nucleus.get('original_id', nucleus['nuclei_id'])
-                    })
-            
-            # Sort by distance
-            prox_nuclei.sort(key=lambda x: x['distance'])
-            
             self.analysis_results.append({
                 'pillar_id': pillar['cell_id'],
                 'original_pillar_id': pillar.get('original_id', pillar['cell_id']),
-                'pillar_coords': pillar_coords,
-                'prox_nuclei_count': len(prox_nuclei),
-                'prox_nuclei': prox_nuclei,
-                'total_nuclei_area': sum(nuc['area'] for nuc in prox_nuclei) if prox_nuclei else 0,
-                'average_distance': np.mean([nuc['distance'] for nuc in prox_nuclei]) if prox_nuclei else 0
+                'pillar_coords': pillar['center_coordinates'],
+                'prox_nuclei': []  # will store nuclei assigned to this pillar
             })
-        
-        print(f"Completed spatial analysis for {len(self.wrapped_pillars)} pillars (merged data)")
+
+        # For each nucleus, find the closest pillar within search_radius
+        for nucleus in self.nuclei_properties:
+            min_distance = float('inf')
+            closest_pillar_index = -1
+
+            for idx, pillar in enumerate(self.wrapped_pillars):
+                distance = self.calculate_distance(pillar['center_coordinates'], nucleus)
+                if distance < min_distance:
+                    min_distance = distance
+                    closest_pillar_index = idx
+
+            # If a pillar is found within search_radius, assign nucleus to it
+            if min_distance <= search_radius:
+                self.analysis_results[closest_pillar_index]['prox_nuclei'].append({
+                    'nuclei_id': nucleus['nuclei_id'],
+                    'distance': min_distance,
+                    'area': nucleus['area'],
+                    'circularity': nucleus.get('circularity', 0),
+                    'original_nuclei_id': nucleus.get('original_id', nucleus['nuclei_id'])
+                })
+
+        # Finalize results: compute counts and averages
+        for result in self.analysis_results:
+            prox_nuclei = result['prox_nuclei']
+            result['prox_nuclei_count'] = len(prox_nuclei)
+            result['total_nuclei_area'] = sum(nuc['area'] for nuc in prox_nuclei) if prox_nuclei else 0
+            result['average_distance'] = np.mean([nuc['distance'] for nuc in prox_nuclei]) if prox_nuclei else 0
+
+        print(f"Completed unique-assignment spatial analysis for {len(self.wrapped_pillars)} pillars (merged data)")
         return self.analysis_results
     
     def create_merged_plots(self, output_dir=None):
