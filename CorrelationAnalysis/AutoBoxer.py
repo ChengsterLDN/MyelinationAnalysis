@@ -153,24 +153,64 @@ class AutoBoxer:
             return False
         return True
 
+def process_all_subfolders(parent_directory):
+    """Process all subfolders in the parent directory that contain the required images."""
+    processed_folders = 0
+    successful_folders = 0
+    
+    # Get all subdirectories in the parent directory
+    for folder_name in os.listdir(parent_directory):
+        subfolder_path = os.path.join(parent_directory, folder_name)
+        
+        # Check if it's a directory
+        if os.path.isdir(subfolder_path):
+            # Look for the required image files
+            pillar_image_path = os.path.join(subfolder_path, "pillar_mip.png")
+            myelin_image_path = os.path.join(subfolder_path, "mbp_mip.png")
+            
+            # Check if both images exist
+            if os.path.exists(pillar_image_path) and os.path.exists(myelin_image_path):
+                print(f"Processing folder: {folder_name}")
+                processed_folders += 1
+                
+                try:
+                    # Create boxes directory in the subfolder
+                    boxes_dir = os.path.join(subfolder_path, "boxes")
+                    os.makedirs(boxes_dir, exist_ok=True)
+                    
+                    # Process this folder
+                    analyser = AutoBoxer(pillar_image_path, myelin_image_path, subfolder_path)
+                    success = analyser.process()
+                    
+                    if success:
+                        successful_folders += 1
+                        print(f"✓ Successfully processed {folder_name}")
+                    else:
+                        print(f"✗ Processing failed for {folder_name}")
+                        
+                except Exception as e:
+                    print(f"✗ Error processing {folder_name}: {str(e)}")
+            else:
+                print(f"Skipping {folder_name}: Required images not found")
+    
+    return processed_folders, successful_folders
+
 if __name__ == "__main__":
     root = Tk()
     root.withdraw()  # Hide the main window
-    pillar_image_path = filedialog.askopenfilename(title="Select Pillar Image")
-    myelin_image_path = filedialog.askopenfilename(title="Select Myelin Image")
-    output_folder = filedialog.askdirectory(title="Select Output Directory")
-
-    if pillar_image_path and myelin_image_path and output_folder:
-        os.makedirs(os.path.join(output_folder, "boxes"), exist_ok=True)
+    
+    # Ask for parent directory instead of individual files
+    parent_directory = filedialog.askdirectory(title="Select Parent Directory Containing Subfolders")
+    
+    if parent_directory:
+        print(f"Processing all subfolders in: {parent_directory}")
+        processed, successful = process_all_subfolders(parent_directory)
         
-        analyser = AutoBoxer(pillar_image_path, myelin_image_path, output_folder)
-        success = analyser.process()
-
-        if success:
-            messagebox.showinfo("Success", "Processing completed successfully!")
-        else:
-            messagebox.showwarning("Warning", "Processing completed with issues.")
+        messagebox.showinfo("Processing Complete", 
+                           f"Processed {processed} folders\n"
+                           f"Successfully completed: {successful}\n"
+                           f"Failed: {processed - successful}")
     else:
-        messagebox.showerror("Error", "Please select both images and an output directory.")
+        messagebox.showerror("Error", "Please select a parent directory.")
     
     root.destroy()
