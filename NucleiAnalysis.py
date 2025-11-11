@@ -14,49 +14,6 @@ class NucleiAnalyser:
         self.nuclei_count = []
         self.nuclei_prop = []
 
-    def mip(self, folder_path):
-
-        """Create Maximum Intensity Projection from Z-stack images"""
-        # Look for PNG files in the nuclei subfolders
-        image_files = glob.glob(os.path.join(folder_path, "**", "nuclei", "*.png"), recursive=True)
-        
-        if not image_files:
-            raise ValueError(f"No PNG files found in nuclei subfolders of {folder_path}")
-        
-        print(f"Found {len(image_files)} images for MIP creation")
-        
-        # Get parent folder name for naming
-        parent_folder_name = os.path.basename(os.path.normpath(folder_path))
-
-        
-        # Read all images and stack them
-        z_stack = []
-        for img_file in sorted(image_files):
-            img = cv2.imread(img_file, cv2.IMREAD_GRAYSCALE)
-            if img is not None:
-                z_stack.append(img)
-            else:
-                print(f"Warning: Could not load {os.path.basename(img_file)}")
-        
-        if not z_stack:
-            raise ValueError("No valid images could be loaded for MIP creation")
-        
-        # Create Maximum Intensity Projection
-        mip = np.max(z_stack, axis=0)
-        
-        # Convert to 8-bit
-        mip = cv2.normalize(mip, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
-        
-        # Save MIP
-        mip_path = os.path.join(self.output_folder, f"{parent_folder_name}_mip.png")
-        cv2.imwrite(mip_path, mip)
-        print(f"MIP saved to {mip_path}")
-        
-        # Convert to 3-channel for compatibility with existing code
-        self.image = cv2.cvtColor(mip, cv2.COLOR_GRAY2BGR)
-        
-        return mip_path
-
     def load_single_image(self):
         """Load a single image (original functionality)"""
         self.image = cv2.imread(self.image_path, cv2.IMREAD_COLOR)
@@ -167,13 +124,8 @@ class NucleiAnalyser:
             cv2.putText(vis_image, str(i), (xc + 10, yc), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
     def process(self):
-        # Check if input is a folder (Z-stack) or single image
-        if os.path.isdir(self.image_path):
-            print("Z-stack folder detected, creating MIP...")
-            self.mip(self.image_path)
-        else:
-            print("Single image detected, loading directly...")
-            self.load_single_image()
+        # Load the nuclei_mip.png image directly
+        self.load_single_image()
 
         if not self.detect_nuclei():
             messagebox.showinfo("No Nuclei", "No nuclei of acceptable size were detected in the image.")
@@ -181,49 +133,63 @@ class NucleiAnalyser:
         
         self.visualise()
         return True
+
+def process_all_subfolders(parent_directory):
+    """Process all subfolders in the parent directory that contain nuclei_mip.png"""
+    processed_folders = 0
+    successful_folders = 0
     
+    # Get all subdirectories in the parent directory
+    for folder_name in os.listdir(parent_directory):
+        subfolder_path = os.path.join(parent_directory, folder_name)
+        
+        # Check if it's a directory
+        if os.path.isdir(subfolder_path):
+            # Look for nuclei_mip.png in the subfolder
+            nuclei_image_path = os.path.join(subfolder_path, "nuclei_mip.png")
+            
+            # Check if the nuclei image exists
+            if os.path.exists(nuclei_image_path):
+                print(f"Processing folder: {folder_name}")
+                processed_folders += 1
+                
+                try:
+                    # Process this folder - output goes to the same subfolder
+                    analyser = NucleiAnalyser(nuclei_image_path, subfolder_path)
+                    success = analyser.process()
+                    
+                    if success:
+                        successful_folders += 1
+                        print(f"✓ Successfully processed {folder_name} - Found {len(analyser.nuclei_count)} nuclei")
+                    else:
+                        print(f"✗ No nuclei detected in {folder_name}")
+                        
+                except Exception as e:
+                    print(f"✗ Error processing {folder_name}: {str(e)}")
+            else:
+                print(f"Skipping {folder_name}: nuclei_mip.png not found")
+    
+    return processed_folders, successful_folders
+
 if __name__ == "__main__":
     root = Tk()
     root.withdraw()
 
-    # Ask user if they want to analyze a single image or a Z-stack folder
-    choice = messagebox.askquestion("Input Type", 
-                                   "Do you want to analyse a single image?\n\n"
-                                   "Click 'Yes' for single image\n"
-                                   "Click 'No' for Z-stack folder")
+    # Ask for parent directory containing subfolders with nuclei_mip.png
+    parent_directory = filedialog.askdirectory(title="Select Parent Directory Containing Subfolders")
     
-    if choice == 'yes':
-        image_path = filedialog.askopenfilename(
-            title="Select Nuclei Image",
-            filetypes=[("Image files", "*.png *.jpg *.jpeg *.tif *.tiff"), ("All files", "*.*")]
-        )
-    else:
-        image_path = filedialog.askdirectory(title="Select Z-stack Folder")
-    
-    if not image_path:
-        messagebox.showerror("Error", "Please select an image file or folder.")
-        exit()
-    
-    output_folder = filedialog.askdirectory(title="Select Output Directory")
-    if not output_folder:
-        messagebox.showerror("Error", "Please select an output directory.")
+    if not parent_directory:
+        messagebox.showerror("Error", "Please select a parent directory.")
         exit()
     
     try:
-        analyser = NucleiAnalyser(image_path, output_folder)
-        success = analyser.process()
+        processed, successful = process_all_subfolders(parent_directory)
         
-        if success:
-            messagebox.showinfo("Success", f"Analysis completed! Found {len(analyser.nuclei_count)} large nuclei.")
+        messagebox.showinfo("Processing Complete", 
+                           f"Processed {processed} folders\n"
+                           f"Successfully completed: {successful}\n"
+                           f"Failed: {processed - successful}")
         
-            # Print summary of stored properties
-            print("\n=== STORED NUCLEI PROPERTIES ===")
-            for prop in analyser.nuclei_prop:
-                print(f"Nuclei {prop['nuclei_id']}: Centre({prop['x_c']}, {prop['y_c']}), "f"Area: {prop['area']:.2f}, Circularity: {prop['circularity']:.3f}")
-        
-        else:
-            messagebox.showwarning("Warning", "Analysis completed with issues.")
-    
     except Exception as e:
         messagebox.showerror("Error", f"An error occurred: {str(e)}")
     
