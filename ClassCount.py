@@ -13,27 +13,35 @@ class MyelinScorer:
         self.processor = ViTImageProcessor.from_pretrained(model_path)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = self.model.to(self.device)
-        self.pillar_coords = []
-        self.boxes_folders = []
 
     def load_pillar_coordinates(self, pillar_coords_path):
         """Load pillar coordinates from JSON file"""
         if os.path.exists(pillar_coords_path):
             with open(pillar_coords_path, 'r') as f:
-                self.pillar_coords = json.load(f)
-            print(f"Loaded {len(self.pillar_coords)} pillar coordinates from {pillar_coords_path}")
-            return True
+                pillar_coords = json.load(f)
+            print(f"Loaded {len(pillar_coords)} pillar coordinates from {pillar_coords_path}")
+            return pillar_coords
         else:
             print(f"Warning: {pillar_coords_path} not found.")
-            return False
-        
-    def find_boxes_folders(self, root_directory):
-        """Recursively find all 'boxes' folders in the directory structure"""
-        self.boxes_folders = []
-        for root, dirs, files in os.walk(root_directory):
-            if 'boxes' in dirs:
-                self.boxes_folders.append(os.path.join(root, 'boxes'))
-        return self.boxes_folders
+            return []
+
+    def find_subfolders_with_boxes(self, parent_directory):
+        """Find all subfolders that contain a 'boxes' folder and pillar_coords.json"""
+        valid_subfolders = []
+        for item in os.listdir(parent_directory):
+            subfolder_path = os.path.join(parent_directory, item)
+            if os.path.isdir(subfolder_path):
+                boxes_path = os.path.join(subfolder_path, 'boxes')
+                pillar_coords_path = os.path.join(subfolder_path, f'{item}_pillar_coords.json')
+                
+                if os.path.exists(boxes_path) and os.path.isdir(boxes_path):
+                    valid_subfolders.append({
+                        'subfolder_path': subfolder_path,
+                        'subfolder_name': item,
+                        'boxes_path': boxes_path,
+                        'pillar_coords_path': pillar_coords_path
+                    })
+        return valid_subfolders
 
     def predict_image(self, image_path):
         """Predict class for a single image"""
@@ -43,7 +51,7 @@ class MyelinScorer:
             outputs = self.model(**inputs)
         return outputs.logits.argmax().item()
     
-    def process_boxes_folder(self, boxes_folder):
+    def process_boxes_folder(self, boxes_folder, pillar_coords):
         """Process a single boxes folder and return class counts and class 3 pillars"""
         print(f"\nProcessing folder: {boxes_folder}")
         class_counts = {0: 0, 1: 0, 2: 0, 3: 0}
@@ -60,10 +68,10 @@ class MyelinScorer:
                     class_counts[pred_class] += 1
                     image_count += 1
                     
-                    if pred_class == 3 and self.pillar_coords:
+                    if pred_class == 3 and pillar_coords:
                         try:
                             box_num = int(img_file.split('_')[1].split('.')[0])
-                            pillar_info = next((p for p in self.pillar_coords if p['cell_id'] == box_num), None)
+                            pillar_info = next((p for p in pillar_coords if p['cell_id'] == box_num), None)
                             if pillar_info:
                                 wrapped_pillars.append({
                                     'cell_id': pillar_info['cell_id'],
@@ -99,95 +107,77 @@ class MyelinScorer:
         root = Tk()
         root.withdraw()
         
-        # Ask user for root directory
-        print("Please select the root directory containing your data...")
-        root_directory = filedialog.askdirectory(title="Select Root Directory")
-        if not root_directory:
-            messagebox.showerror("Error", "Please select a root directory.")
+        # Ask user for parent directory
+        print("Please select the parent directory containing your subfolders...")
+        parent_directory = filedialog.askdirectory(title="Select Parent Directory")
+        if not parent_directory:
+            messagebox.showerror("Error", "Please select a parent directory.")
             root.destroy()
             return
         
-        # Ask user for pillar coordinates file
-        print("Please select the pillar coordinates JSON file...")
-        pillar_coords_path = filedialog.askopenfilename(
-            title="Select Pillar Coordinates JSON File",
-            filetypes=[("JSON files", "*.json"), ("All files", "*.*")]
-        )
-        if not pillar_coords_path:
-            messagebox.showerror("Error", "Please select a pillar coordinates JSON file.")
+        # Find valid subfolders
+        valid_subfolders = self.find_subfolders_with_boxes(parent_directory)
+        if not valid_subfolders:
+            messagebox.showinfo("Info", "No valid subfolders found. Each subfolder should contain a 'boxes' folder and pillar_coords.json.")
             root.destroy()
             return
         
-        # Ask user for output directory
-        print("Please select the output directory...")
-        output_directory = filedialog.askdirectory(title="Select Output Directory")
-        if not output_directory:
-            messagebox.showerror("Error", "Please select an output directory.")
-            root.destroy()
-            return
+        print(f"Found {len(valid_subfolders)} valid subfolders:")
+        for subfolder_info in valid_subfolders:
+            print(f"  - {subfolder_info['subfolder_name']}")
         
-        # Load pillar coordinates
-        if not self.load_pillar_coordinates(pillar_coords_path):
-            messagebox.showwarning("Warning", "Pillar coordinates file not found. Continuing without coordinate filtering.")
-        
-        # Find boxes folders
-        boxes_folders = self.find_boxes_folders(root_directory)
-        if not boxes_folders:
-            messagebox.showinfo("Info", "No 'boxes' folders found in the selected directory.")
-            root.destroy()
-            return
-        
-        print(f"Found {len(boxes_folders)} boxes folders:")
-        for folder in boxes_folders:
-            print(f"  - {folder}")
-        
-        # Process all folders
+        # Process all subfolders
         total_start_time = time.time()
         all_wrapped_pillars = []
+        total_class_3_count = 0
         
-        for boxes_folder in boxes_folders:
-            result = self.process_boxes_folder(boxes_folder)
+        for subfolder_info in valid_subfolders:
+            print(f"\n=== Processing {subfolder_info['subfolder_name']} ===")
+            
+            # Load pillar coordinates for this subfolder
+            pillar_coords = self.load_pillar_coordinates(subfolder_info['pillar_coords_path'])
+            
+            # Process the boxes folder
+            result = self.process_boxes_folder(subfolder_info['boxes_path'], pillar_coords)
             
             # Print folder results
-            parent_folder_name = os.path.basename(os.path.dirname(boxes_folder))
-            print(f"\nPrediction Counts for {parent_folder_name}/boxes:")
+            print(f"\nPrediction Counts for {subfolder_info['subfolder_name']}:")
             for class_id, count in result['class_counts'].items():
                 print(f"  Class {class_id}: {count} images")
             print(f"  Total images processed: {result['image_count']}")
             print(f"  Time elapsed: {result['processing_time']:.2f} seconds")
             
-            # Save individual folder results
+            # Save wrapped pillars in the same subfolder
             if result['wrapped_pillars']:
-                output_filename = f"{parent_folder_name}_wrapped_pillars.json"
-                output_path = os.path.join(output_directory, output_filename)
+                output_filename = f"{subfolder_info['subfolder_name']}_wrapped_pillars.json"
+                output_path = os.path.join(subfolder_info['subfolder_path'], output_filename)
                 self.save_wrapped_pillars(result['wrapped_pillars'], output_path)
                 all_wrapped_pillars.extend(result['wrapped_pillars'])
+                total_class_3_count += len(result['wrapped_pillars'])
+                print(f"  Class 3 pillars found: {len(result['wrapped_pillars'])}")
             else:
                 print(f"  No class 3 pillars found in this folder")
         
         total_end_time = time.time()
         total_elapsed_time = total_end_time - total_start_time
         
-        # Save combined results
-        """if all_wrapped_pillars:
-            combined_output_path = os.path.join(output_directory, "all_wrapped_pillars.json")
-            self.save_wrapped_pillars(all_wrapped_pillars, combined_output_path)"""
-        
         # Show final summary
         print(f"\n=== ANALYSIS COMPLETE ===")
         print(f"Total processing time: {total_elapsed_time:.2f} seconds")
-        print(f"Total class 3 pillars found: {len(all_wrapped_pillars)}")
-        print(f"Results saved to: {output_directory}")
+        print(f"Total class 3 pillars found across all subfolders: {total_class_3_count}")
+        print(f"Results saved in respective subfolders")
         
         messagebox.showinfo(
             "Analysis Complete", 
             f"Analysis completed successfully!\n\n"
-            f"Total class 3 pillars found: {len(all_wrapped_pillars)}\n"
-            f"Results saved to: {output_directory}"
+            f"Total subfolders processed: {len(valid_subfolders)}\n"
+            f"Total class 3 pillars found: {total_class_3_count}\n"
+            f"Results saved in respective subfolders"
         )
         
-if __name__ == "__main__":
+        root.destroy()
 
+if __name__ == "__main__":
     model_path = "./Modelv1.4/Run3New"
 
     try:
