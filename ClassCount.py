@@ -186,5 +186,5 @@ if __name__ == "__main__":
     except Exception as e:
         root = Tk()
         root.withdraw()
-        messagebox.showerror("Error", f"An error occurred during initialization: {str(e)}")
+        messagebox.showerror("Error", f"An error occurred during initialisation: {str(e)}")
         root.destroy()
