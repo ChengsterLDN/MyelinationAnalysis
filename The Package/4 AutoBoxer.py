@@ -1,141 +1,160 @@
 import cv2
-import numpy as np
 import os
+import numpy as np
 import json
 from tkinter import Tk, filedialog, messagebox
-import glob
+from scipy.ndimage import convolve
+
+#os.makedirs('boxes', exist_ok=True)
 
 
-class NucleiAnalyser:
-    def __init__(self, image_path, output_folder):
-        self.image_path = image_path
+class AutoBoxer:
+
+    def __init__(self, pillar_image_path, myelin_image_path, output_folder):
+        self.pillar_image_path = pillar_image_path        
+        self.myelin_image_path = myelin_image_path
+        
         self.output_folder = output_folder
-        self.image = None
-        self.nuclei_count = []
-        self.nuclei_prop = []
+        self.dot_positions = []
+        self.box_positions = []  
 
-    def load_single_image(self):
-        """Load a single image (original functionality)"""
-        self.image = cv2.imread(self.image_path, cv2.IMREAD_COLOR)
-        if self.image is None:
-            raise ValueError(f"Failed to load image: {self.image_path}")
+        self.pillar_image = cv2.imread(pillar_image_path, cv2.IMREAD_COLOR)
+        self.myelin_image = cv2.imread(myelin_image_path, cv2.IMREAD_COLOR)
 
-    def preprocess(self):
-        # Convert to greyscale and otsu threshold
-        grey = cv2.cvtColor(self.image, cv2.COLOR_BGR2GRAY)
-        _, binary = cv2.threshold(grey, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-        binary_cleaned = cv2.fastNlMeansDenoising(binary)
+        # Check if images loaded successfully
+        if self.pillar_image is None:
+            raise ValueError(f"Failed to load pillar image: {pillar_image_path}")
+        if self.myelin_image is None:
+            raise ValueError(f"Failed to load myelin image: {myelin_image_path}")
         
-        return binary_cleaned
+        # Calculate scales for coordinate conversion
+        self.display_pillar_scale = 1.0  
+        self.overlay_scale_x = 1.0
+        self.overlay_scale_y = 1.0
         
-    
-    def detect_nuclei(self):
-        # Filter out nuclei of acceptable size
-        binary_cleaned = self.preprocess()
+    def extract(self):
 
-        # Find them nuclei
-        contours, _ = cv2.findContours(binary_cleaned, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        """Detect centers of pillars"""
 
-        MIN_CONTOUR_AREA = 20
-        filtered_contours = []
+        gray_image = cv2.cvtColor(self.pillar_image, cv2.COLOR_BGR2GRAY)
+        _, binary_mask = cv2.threshold(gray_image, 128, 255, cv2.THRESH_BINARY)
+        radius = 15
+        y, x = np.ogrid[-radius: radius+1, -radius: radius+1]
+        circular_filter = x**2 + y**2 <= radius**2
+        filtered_image = convolve(binary_mask, circular_filter.astype(float))
+        contours, _ = cv2.findContours(filtered_image.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        self.dot_positions = []
+        self.dot_visuals = []
 
-        for cnt in contours:
-            if cv2.contourArea(cnt) > MIN_CONTOUR_AREA:
-                filtered_contours.append(cnt)
-
-        final_binary = np.zeros_like(binary_cleaned)
-        for cnt in filtered_contours:
-            cv2.drawContours(final_binary, [cnt], -1, 255, -1)
-
-        contours_final, _ = cv2.findContours(final_binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        MIN_SIZE_THRESHOLD = 450
-        MAX_SIZE_THRESHOLD = 10000
-
-        self.nuclei_count = []
-        self.nuclei_prop = []
-
-        for i, contour in enumerate(contours_final):
+        min_area = 2250
+        img_h, img_w = binary_mask.shape[:2]
+        
+        for contour in contours:
             area = cv2.contourArea(contour)
+            if area < min_area:  
+                continue
+            moments = cv2.moments(contour)
 
-            # Calculate circularity 
-            perimeter = cv2.arcLength(contour, True)
-            if perimeter > 0 and area > 0:
-                circularity = (4 * np.pi * area) / (perimeter ** 2)
-            else:
-                circularity = 0
-            
-            # Filter by size and circularity 
-            if (area >= MIN_SIZE_THRESHOLD and area <= MAX_SIZE_THRESHOLD 
-                and circularity >= 0.01):
-                
-                self.nuclei_count.append(contour)
-                
-                # Calculate centroid 
-                moments = cv2.moments(contour)
-                if moments["m00"] != 0:
-                    xc = int(moments["m10"] / moments["m00"])
-                    yc = int(moments["m01"] / moments["m00"])
-                else:
-                    xc, yc = 0, 0
-                
-                # Store properties
-                properties = {
-                    "nuclei_id": i,
-                    "x_c": xc,
-                    "y_c": yc,
-                    "area": float(area),
-                    "circularity": float(circularity)
-                }
-                self.nuclei_prop.append(properties)
+            # Check if contour touches image border
+            x, y, w, h = cv2.boundingRect(contour)
+            if x <= 0 or y <= 0 >= img_h:
+                continue  # Skip partial pillars touching edges
 
-        # Get parent folder name for naming
-        if os.path.isdir(self.image_path):
-            parent_folder_name = os.path.basename(os.path.normpath(self.image_path))
-        else:
-            parent_folder_name = os.path.splitext(os.path.basename(self.image_path))[0]
+            if moments["m00"] != 0:
+                xc = int(moments["m10"] / moments["m00"])
+                yc = int(moments["m01"] / moments["m00"])
+                self.dot_positions.append((xc, yc))
 
-        # Save properties to JSON
-        json_path = os.path.join(self.output_folder, f"{parent_folder_name}_nuclei_props.json")
-        with open(json_path, 'w') as json_file:
-            json.dump(self.nuclei_prop, json_file, indent = 4)
-        print(f"Detected {len(self.nuclei_count)} nuclei")
-        print(f"Nuclei properties saved to {json_path}")
-        
-        return len(self.nuclei_count) > 0
-        
-    def visualise(self):
-        if not self.nuclei_count:
+        if not self.dot_positions:
+            messagebox.showinfo("Detection Complete", "No pillars detected.")
+            return False   
+        return True
+
+    def create_box(self):
+        """Create boxes around detected centers and display scoring buttons."""
+        box_size = 100
+        self.box_positions = []  # Reset box positions
+
+        # Sort dot positions by top-to-bottom, left-to-right
+        self.dot_positions = sorted(self.dot_positions, key=lambda pos: (pos[1], pos[0]))
+
+        for (x, y) in self.dot_positions:
+            x1 = max(0, x - box_size // 2)
+            y1 = max(0, y - box_size // 2)
+            x2 = min(self.myelin_image.shape[1], x + box_size // 2)
+            y2 = min(self.myelin_image.shape[0], y + box_size // 2)
+
+            # Store the rectangle's position
+            self.box_positions.append((x1, y1, x2, y2))
+
+        print(f"Created {len(self.box_positions)} boxes.")
+        return True
+    
+    def save_box(self):
+
+        """Save all cropped box images."""
+
+        if not self.box_positions:
+            messagebox.showwarning("No Boxes", "Please create boxes before saving.")
             return
-            
-        vis_image = self.image.copy()
 
-        for i, (contour, properties) in enumerate(zip(self.nuclei_count, self.nuclei_prop)):
-            # Draw contour
-            cv2.drawContours(vis_image, [contour], -1, (0, 255, 0), 2)
-                
-            # Draw centroid
-            xc = properties["x_c"]
-            yc = properties["y_c"]
-            cv2.circle(vis_image, (xc, yc), 5, (255, 0, 0), -1)
-                
-            # Add number label
-            cv2.putText(vis_image, str(i), (xc + 10, yc), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        # Load the original myelin image for cropping
+        base_image = cv2.imread(self.myelin_image_path, cv2.IMREAD_COLOR)
+        
+        cell_data = []
 
+        for i, (x1, y1, x2, y2) in enumerate(self.box_positions):
+            # Add padding and ensure bounds are within the image dimensions
+            y1_cropped = max(0, y1)
+            y2_cropped = min(base_image.shape[0], y2)
+            x1_cropped = max(0, x1)
+            x2_cropped = min(base_image.shape[1], x2)
+            cropped_img = base_image[y1_cropped:y2_cropped, x1_cropped:x2_cropped]
+            file_path = os.path.join(self.output_folder, "boxes", f"box_{i}.png")
+            cv2.imwrite(file_path, cropped_img)
+
+            xc, yc = self.dot_positions[i]
+
+             # Store data for this pillar
+            cell_info = {
+                "cell_id": i,
+                "image_filename": f"box_{i}.png",
+                "center_coordinates": {
+                    "x": xc,
+                    "y": yc
+                }
+            }
+
+            cell_data.append(cell_info)
+            print(f"Saved {file_path}")
+        # Get parent folder name for naming
+        if os.path.isdir(self.output_folder):
+            parent_folder_name = os.path.basename(os.path.normpath(self.output_folder))
+        else:
+            parent_folder_name = os.path.splitext(os.path.basename(self.output_folder))[0]
+
+        
+        json_path = os.path.join(self.output_folder, f"{parent_folder_name}_pillar_coords.json")
+        with open(json_path, 'w') as json_file:
+            json.dump(cell_data, json_file, indent=4)
+        print(f"All {len(self.box_positions)} boxes have been saved.")
+        print(f"Pillar coordinates saved to {json_path}")
+        return True
+        
     def process(self):
-        # Load the nuclei_mip.png image directly
-        self.load_single_image()
-
-        if not self.detect_nuclei():
-            messagebox.showinfo("No Nuclei", "No nuclei of acceptable size were detected in the image.")
+        """Main processing pipeline."""
+        if not self.extract():
             return False
         
-        self.visualise()
+        if not self.create_box():
+            return False
+            
+        if not self.save_box():
+            return False
         return True
 
 def process_all_subfolders(parent_directory):
-    """Process all subfolders in the parent directory that contain nuclei_mip.png"""
+    """Process all subfolders in the parent directory that contain the required images."""
     processed_folders = 0
     successful_folders = 0
     
@@ -145,52 +164,53 @@ def process_all_subfolders(parent_directory):
         
         # Check if it's a directory
         if os.path.isdir(subfolder_path):
-            # Look for nuclei_mip.png in the subfolder
-            nuclei_image_path = os.path.join(subfolder_path, "nuclei_mip.png")
+            # Look for the required image files
+            pillar_image_path = os.path.join(subfolder_path, "pillar_mip.png")
+            myelin_image_path = os.path.join(subfolder_path, "mbp_mip.png")
             
-            # Check if the nuclei image exists
-            if os.path.exists(nuclei_image_path):
+            # Check if both images exist
+            if os.path.exists(pillar_image_path) and os.path.exists(myelin_image_path):
                 print(f"Processing folder: {folder_name}")
                 processed_folders += 1
                 
                 try:
-                    # Process this folder - output goes to the same subfolder
-                    analyser = NucleiAnalyser(nuclei_image_path, subfolder_path)
+                    # Create boxes directory in the subfolder
+                    boxes_dir = os.path.join(subfolder_path, "boxes")
+                    os.makedirs(boxes_dir, exist_ok=True)
+                    
+                    # Process this folder
+                    analyser = AutoBoxer(pillar_image_path, myelin_image_path, subfolder_path)
                     success = analyser.process()
                     
                     if success:
                         successful_folders += 1
-                        print(f"✓ Successfully processed {folder_name} - Found {len(analyser.nuclei_count)} nuclei")
+                        print(f"✓ Successfully processed {folder_name}")
                     else:
-                        print(f"✗ No nuclei detected in {folder_name}")
+                        print(f"✗ Processing failed for {folder_name}")
                         
                 except Exception as e:
                     print(f"✗ Error processing {folder_name}: {str(e)}")
             else:
-                print(f"Skipping {folder_name}: nuclei_mip.png not found")
+                print(f"Skipping {folder_name}: Required images not found")
     
     return processed_folders, successful_folders
 
 if __name__ == "__main__":
     root = Tk()
-    root.withdraw()
-
-    # Ask for parent directory containing subfolders with nuclei_mip.png
+    root.withdraw()  # Hide the main window
+    
+    # Ask for parent directory instead of individual files
     parent_directory = filedialog.askdirectory(title="Select Parent Directory Containing Subfolders")
     
-    if not parent_directory:
-        messagebox.showerror("Error", "Please select a parent directory.")
-        exit()
-    
-    try:
+    if parent_directory:
+        print(f"Processing all subfolders in: {parent_directory}")
         processed, successful = process_all_subfolders(parent_directory)
         
         messagebox.showinfo("Processing Complete", 
                            f"Processed {processed} folders\n"
                            f"Successfully completed: {successful}\n"
                            f"Failed: {processed - successful}")
-        
-    except Exception as e:
-        messagebox.showerror("Error", f"An error occurred: {str(e)}")
+    else:
+        messagebox.showerror("Error", "Please select a parent directory.")
     
     root.destroy()

@@ -285,21 +285,21 @@ class FolderProcessor:
                     image_paths, 
                     dim=True,
                     apply_otsu=True,
-                    apply_yellow_mask=False
+                    apply_yellow=False
                 )
             elif folder_name == 'pillar':
                 mip_image = self.mip_processor.create_mip(
                     image_paths, 
                     dim=False,
                     apply_otsu=True,
-                    apply_yellow_mask=True
+                    apply_yellow=True
                 )
             else:  # mbp
                 mip_image = self.mip_processor.create_mip(
                     image_paths, 
                     dim=False,
                     apply_otsu=False,
-                    apply_yellow_mask=False
+                    apply_yellow=False
                 )
             
             if mip_image is None:

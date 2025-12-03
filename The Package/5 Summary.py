@@ -238,7 +238,7 @@ class MyelinScorer:
         root.destroy()
 
 if __name__ == "__main__":
-    model_path = "./Modelv1.4/Run3New"
+    model_path = "./Run3New"
 
     try:
         analyser = MyelinScorer(model_path)
