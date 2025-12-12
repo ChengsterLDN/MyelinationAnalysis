@@ -9,12 +9,12 @@ import evaluate
 # Set device to GPU if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-dataset = load_dataset("imagefolder", data_dir = "C:\\Users\\jonat\\Documents\\GitHub\\MyelinationAnalysis\\MBPValidationDataset")
+dataset = load_dataset("imagefolder", data_dir = "C:\\Users\\jonat\\Documents\\GitHub\\MyelinationAnalysis\\PillarValidationDataset")
 
 # Load Pretrained ViT model and processor
 
 processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224-in21k")
-model = ViTForImageClassification.from_pretrained("./StackValidationv1.0/MBPRun",
+model = ViTForImageClassification.from_pretrained("./StackValidationv1.0/MBPRun3",
                                                 num_labels=2,  # valid, invalid
                                                 ignore_mismatched_sizes=True)
 
