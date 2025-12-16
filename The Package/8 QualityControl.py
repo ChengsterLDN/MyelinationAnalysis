@@ -79,9 +79,8 @@ def batch(selected_subfolders, output_file="manual_scoring_batch.txt"):
     
     return batch_content
 
-def call_manual(mbp_path, pillar_path):
-    # launch the manual scoring app
-
+def call_manual(mbp_path, pillar_path, subfolder_name):
+    """Launch ManualScore.py with pre-loaded image paths"""
     try:
         current_dir = os.path.dirname(os.path.abspath(__file__))
         manual_score_script = os.path.join(current_dir, "ManualScore.py")
@@ -90,26 +89,32 @@ def call_manual(mbp_path, pillar_path):
             manual_score_script = "ManualScore.py"
             
         if os.path.exists(manual_score_script):
-            subprocess.run([
-                sys.executable, 
-                manual_score_script, 
-                "--pillar", pillar_path, 
-                "--myelin", mbp_path
-            ])
+            print(f"\nLaunching manual scoring for: {subfolder_name}")
+            print(f"  Pillar image: {pillar_path}")
+            print(f"  MBP image: {mbp_path}")
+            
+            # Single command string
+            command = f'"{sys.executable}" "{manual_score_script}" "{pillar_path}" "{mbp_path}"'
+            print(f"  Command: {command}")
+            
+            # Run as a single string with shell=True
+            result = subprocess.run(command, capture_output=True, text=True, shell=True)
+            
+            if result.returncode != 0:
+                print(f"ManualScore.py exited with error (code {result.returncode})")
+                print(f"Error output: {result.stderr}")
+                return False
+            return True
+            
         else:
             print(f"Warning: ManualScore.py not found at {manual_score_script}")
-            print(f"Please run ManualScore.py manually with:")
-            print(f"  Pillar Image: {pillar_path}")
-            print(f"  MBP Image: {mbp_path}")
+            return False
             
     except Exception as e:
         print(f"Error launching ManualScore.py: {e}")
-        print(f"Please run ManualScore.py manually with:")
-        print(f"  Pillar Image: {pillar_path}")
-        print(f"  MBP Image: {mbp_path}")
+        return False
 
 def gui(batch_content):
-
     root = tk.Tk()
     root.title("Manual Scoring Launcher")
     root.geometry("600x400")
@@ -117,7 +122,6 @@ def gui(batch_content):
     frame = tk.Frame(root)
     frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
     
-
     title_label = tk.Label(frame, text="Selected Subfolders for Manual Scoring", 
                           font=("Courier", 14, "bold"))
     title_label.pack(pady=10)
@@ -146,6 +150,7 @@ def gui(batch_content):
             "Start Manual Scoring",
             f"You are about to start manual scoring for {len(batch_content)} subfolders.\n\n"
             f"This will open the ManualScore.py application for each subfolder one by one.\n\n"
+            f"The image paths will be automatically loaded - no need to select them manually.\n\n"
             f"Continue?"
         )
         
@@ -155,24 +160,45 @@ def gui(batch_content):
             print("\n" + "="*60)
             print("STARTING MANUAL SCORING PROCESS")
             print("="*60)
+            print("Note: Image paths will be automatically loaded for each folder")
+            print("="*60)
             
             for i, item in enumerate(batch_content, 1):
                 print(f"\n[{i}/{len(batch_content)}] Processing: {item['subfolder_name']}")
                 print(f"  Pillar image: {item['pillar_image']}")
                 print(f"  MBP image: {item['mbp_image']}")
                 
-                input(f"\nPress Enter to launch ManualScore.py for {item['subfolder_name']}...")
-
-                call_manual(item['mbp_image'], item['pillar_image'])
+                # No need for user input - automatically launch
+                print(f"\nLaunching ManualScore.py for {item['subfolder_name']}...")
                 
-                print(f"\nCompleted manual scoring for {item['subfolder_name']}")
+                success = call_manual(item['mbp_image'], item['pillar_image'], item['subfolder_name'])
+                
+                if success:
+                    print(f":) Completed manual scoring for {item['subfolder_name']}")
+                else:
+                    print(f"!!! Failed to complete {item['subfolder_name']}")
+                
                 print("-"*50)
+                
+                # Ask if user wants to continue after each folder
+                if i < len(batch_content):
+                    next_folder = batch_content[i]['subfolder_name']
+                    response = input(f"\nPress Enter to continue to {next_folder} or 'q' to quit: ")
+                    if response.lower() == 'q':
+                        print("\nManual scoring stopped by user.")
+                        break
             
             print("\n" + "="*60)
             print("MANUAL SCORING PROCESS COMPLETED")
             print("="*60)
-            print(f"\nAll {len(batch_content)} subfolders have been processed.")
+            print(f"\nProcessed {i} out of {len(batch_content)} subfolders.")
             print("You can now review and score the images.")
+            
+            messagebox.showinfo(
+                "Process Complete",
+                f"Manual scoring completed for {i} out of {len(batch_content)} subfolders.\n\n"
+                f"Results are saved in each folder's scoring directories."
+            )
     
     # Button frame
     button_frame = tk.Frame(frame)
@@ -197,7 +223,6 @@ def gui(batch_content):
     root.mainloop()
 
 def main():
-
     root = tk.Tk()
     root.withdraw()
     
@@ -229,6 +254,7 @@ def main():
         "Manual Scoring Ready",
         f"Selected {len(selected_subfolders)} subfolders for manual scoring.\n\n"
         f"Batch file saved to:\n{batch_file}\n\n"
+        f"Image paths will be automatically loaded for each folder.\n\n"
         f"Do you want to start the manual scoring process now?"
     )
     
