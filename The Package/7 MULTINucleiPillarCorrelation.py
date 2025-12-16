@@ -83,7 +83,7 @@ class PillarNucleiAnalyser:
         """Analyse within search radius for all merged data, with each nucleus assigned only to its closest pillar"""
         self.analysis_results = []
 
-        # Initialize results for each pillar
+        # Initialise results for each pillar
         for pillar in self.wrapped_pillars:
             self.analysis_results.append({
                 'pillar_id': pillar['cell_id'],
@@ -113,7 +113,7 @@ class PillarNucleiAnalyser:
                     'original_nuclei_id': nucleus.get('original_id', nucleus['nuclei_id'])
                 })
 
-        # Finalize results: compute counts and averages
+        # Finalise results: compute counts and averages
         for result in self.analysis_results:
             prox_nuclei = result['prox_nuclei']
             result['prox_nuclei_count'] = len(prox_nuclei)
@@ -194,9 +194,7 @@ class PillarNucleiAnalyser:
         
         # Save merged plots
         output_path1 = os.path.join(output_dir, "merged_distance_vs_nuclei_area.png")
-        output_path2 = os.path.join(output_dir, "merged_distance_vs_nuclei_count.png")
         plt.savefig(output_path1, dpi=300, bbox_inches='tight')
-        plt.savefig(output_path2, dpi=300, bbox_inches='tight')
         print(f"Merged plots saved to {output_dir}")
         
         plt.show()
