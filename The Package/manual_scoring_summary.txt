@@ -1,10 +1,16 @@
 Manual Scoring Batch - Selected Subfolders
 ==================================================
 
-Subfolder: Exp4-Clem-Dose8-2
-Path: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose8-2
-MBP Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose8-2\mbp_mip.png
-Pillar Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose8-2\pillar_mip.png
+Subfolder: Exp4-Clem-Dose3-1
+Path: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose3-1
+MBP Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose3-1\mbp_mip.png
+Pillar Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose3-1\pillar_mip.png
+--------------------------------------------------
+
+Subfolder: Exp4-Clem-Dose5-1
+Path: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose5-1
+MBP Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose5-1\mbp_mip.png
+Pillar Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose5-1\pillar_mip.png
 --------------------------------------------------
 
 Subfolder: Exp4-Clem-Dose6-5
@@ -13,21 +19,15 @@ MBP Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Ex
 Pillar Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose6-5\pillar_mip.png
 --------------------------------------------------
 
-Subfolder: Exp4-Clem-Dose0-4
-Path: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose0-4
-MBP Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose0-4\mbp_mip.png
-Pillar Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose0-4\pillar_mip.png
+Subfolder: Exp4-Clem-Dose1-4
+Path: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose1-4
+MBP Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose1-4\mbp_mip.png
+Pillar Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose1-4\pillar_mip.png
 --------------------------------------------------
 
-Subfolder: Exp4-Clem-Dose0-3
-Path: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose0-3
-MBP Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose0-3\mbp_mip.png
-Pillar Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose0-3\pillar_mip.png
---------------------------------------------------
-
-Subfolder: Exp4-Clem-Dose1-5
-Path: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose1-5
-MBP Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose1-5\mbp_mip.png
-Pillar Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose1-5\pillar_mip.png
+Subfolder: Exp4-Clem-Dose3-6
+Path: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose3-6
+MBP Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose3-6\mbp_mip.png
+Pillar Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose3-6\pillar_mip.png
 --------------------------------------------------
 
