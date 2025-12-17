@@ -5,8 +5,6 @@ import numpy as np
 from tkinter import Tk, filedialog, messagebox
 import os
 import glob
-import scipy.stats as stats
-from scipy.stats import linregress
 
 class PillarNucleiAnalyser:
     def __init__(self):
@@ -126,7 +124,7 @@ class PillarNucleiAnalyser:
         return self.analysis_results
     
     def create_merged_plots(self, output_dir=None):
-        # Create two  plots with R^2 (correlation of determination) and p-values"""
+        """Create two comprehensive plots from all merged data"""
         
         if not self.analysis_results:
             print("No analysis results available. Run analyse_space first.")
@@ -156,9 +154,10 @@ class PillarNucleiAnalyser:
                 avg_distance = result['average_distance']
                 nuclei_counts.append((avg_distance, result['prox_nuclei_count']))
         
+        # Create the comprehensive plots
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
         
-        # Plot 1: Distance vs Nuclei Area 
+        # Plot 1: Distance vs Nuclei Area (All Data)
         if distances and nuclei_areas:
             ax1.scatter(distances, nuclei_areas, alpha=0.6, color='blue', s=30)
             ax1.set_xlabel('Distance from Wrapped Pillar (pixels)')
@@ -166,40 +165,13 @@ class PillarNucleiAnalyser:
             ax1.set_title('Distance vs Nuclei Area\n(All Individual Nuclei - Merged Data)')
             ax1.grid(True, alpha=0.3)
             
-            # correlation and p-value
+            # Add trend line
             if len(distances) > 1:
-                # Calculate R^2 (coefficient of determination)
-                correlation_matrix = np.corrcoef(distances, nuclei_areas)
-                r_value = correlation_matrix[0, 1]
-                r_squared = r_value ** 2
-                
-                # Calculate linear regression for trend line
                 z = np.polyfit(distances, nuclei_areas, 1)
                 p = np.poly1d(z)
-                
-                # Calculate p-value using linear regression
-                slope, intercept, r_value_lr, p_value, std_err = linregress(distances, nuclei_areas)
-                
-                # trend line 
                 ax1.plot(distances, p(distances), "r--", alpha=0.8, 
-                        label=f'Fit: y = {z[0]:.3f}x + {z[1]:.1f}\nR^2 = {r_squared:.3f}\np = {p_value:.3e}')
+                        label=f'Trend: y = {z[0]:.2f}x + {z[1]:.2f}')
                 ax1.legend()
-                
-                # Print statistical summary to console
-                print("\n=== PLOT 1 STATISTICS (Distance vs Nuclei Area) ===")
-                print(f"Number of data points: {len(distances)}")
-                print(f"Correlation coefficient (r): {r_value:.3f}")
-                print(f"Coefficient of determination (R^2): {r_squared:.3f}")
-                print(f"P-value: {p_value:.3e}")
-                print(f"Slope: {slope:.3f}")
-                print(f"Intercept: {intercept:.1f}")
-                
-                # Interpret significance - say 5% cos why not
-                alpha = 0.05
-                if p_value < alpha:
-                    print(f"Significant correlation: YES (p < {alpha})")
-                else:
-                    print(f"Significant correlation: NO (p ≥ {alpha})")
         
         # Plot 2: Distance vs Nuclei Count (All Data)
         if nuclei_counts:
@@ -210,47 +182,20 @@ class PillarNucleiAnalyser:
             ax2.set_title('Distance vs Nuclei Count\n(All Wrapped Pillars - Merged Data)')
             ax2.grid(True, alpha=0.3)
             
-            # Calculate correlation and p-value
+            # Add trend line
             if len(count_distances) > 1:
-                # Calculate R^2 (coefficient of determination)
-                correlation_matrix = np.corrcoef(count_distances, counts)
-                r_value = correlation_matrix[0, 1]
-                r_squared = r_value ** 2
-                
-                # Calculate linear regression for trend line
                 z = np.polyfit(count_distances, counts, 1)
                 p = np.poly1d(z)
-                
-                # Calculate p-value using linear regression
-                slope, intercept, r_value_lr, p_value, std_err = linregress(count_distances, counts)
-                
-                # trend line
                 ax2.plot(count_distances, p(count_distances), "r--", alpha=0.8,
-                        label=f'Fit: y = {z[0]:.3f}x + {z[1]:.1f}\nR² = {r_squared:.3f}\np = {p_value:.3e}')
+                        label=f'Trend: y = {z[0]:.2f}x + {z[1]:.2f}')
                 ax2.legend()
-                
-                # Print statistical summary to console
-                print("\n=== PLOT 2 STATISTICS (Distance vs Nuclei Count) ===")
-                print(f"Number of data points: {len(count_distances)}")
-                print(f"Correlation coefficient (r): {r_value:.3f}")
-                print(f"Coefficient of determination (R²): {r_squared:.3f}")
-                print(f"P-value: {p_value:.3e}")
-                print(f"Slope: {slope:.3f}")
-                print(f"Intercept: {intercept:.1f}")
-                
-                # Interpret significance - say 5% cos why not
-                alpha = 0.05
-                if p_value < alpha:
-                    print(f"Significant correlation: YES (p < {alpha})")
-                else:
-                    print(f"Significant correlation: NO (p ≥ {alpha})")
         
         plt.tight_layout()
         
         # Save merged plots
         output_path1 = os.path.join(output_dir, "merged_distance_vs_nuclei_area.png")
         plt.savefig(output_path1, dpi=300, bbox_inches='tight')
-        print(f"\nMerged plots saved to {output_dir}")
+        print(f"Merged plots saved to {output_dir}")
         
         plt.show()
     
