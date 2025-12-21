@@ -1,26 +1,21 @@
 import os
 import json
 import random
-import subprocess
 import tkinter as tk
 from tkinter import filedialog, messagebox
-from pathlib import Path
 import sys
+import subprocess
+import tempfile
+import time
 
 def random_selection(parent_directory, percentage=10):
-    """
-    Select random series from the parent directory.
-    
-    args:
-        parent_directory: Path to the parent directory containing subfolders
-        percentage: Percentage of subfolders to select (we'll default to 10% - might change to 5% idk)
-    """
+    """Select random series from the parent directory."""
     subfolders = []
     
     for item in os.listdir(parent_directory):
         subfolder_path = os.path.join(parent_directory, item)
         if os.path.isdir(subfolder_path):
-            # Check for required images (NO NAME FILTERING)
+            # Check for required images
             mbp_path = os.path.join(subfolder_path, 'mbp_mip.png')
             pillar_path = os.path.join(subfolder_path, 'pillar_mip.png')
             
@@ -32,244 +27,288 @@ def random_selection(parent_directory, percentage=10):
                     'pillar_path': pillar_path
                 })
     
-    print(f"Found {len(subfolders)} valid subfolders with mbp_mip.png and pillar_mip.png")
-    
-    # Calculate how many to select (minimum 1, maximum available)
     num_to_select = max(1, int(len(subfolders) * percentage / 100))
     num_to_select = min(num_to_select, len(subfolders))
-    
-    # Randomly select subfolders
     selected = random.sample(subfolders, num_to_select)
-    
-    print(f"Randomly selected {len(selected)} subfolders ({percentage}%):")
-    for item in selected:
-        print(f"  - {item['name']}")
     
     return selected
 
-def batch(selected_subfolders, output_file="manual_scoring_batch.txt"):
-    
-    # probs just need the subfolder name to compare for any signfiicant differences...
-    batch_content = []
-    
-    for subfolder in selected_subfolders:
-        batch_content.append({
-            'subfolder_name': subfolder['name'],
-            'subfolder_path': subfolder['path'],
-            'mbp_image': subfolder['mbp_path'],
-            'pillar_image': subfolder['pillar_path']
-        })
-    
+def batch_save(batch_content, output_file):
+    """Saves the current state of scores to the JSON file."""
     with open(output_file, 'w') as f:
         json.dump(batch_content, f, indent=2)
-    
-    print(f"\nBatch file saved to: {output_file}")
-    
-    # outputs to terminal just in case
-    txt_file = "manual_scoring_summary.txt"
-    with open(txt_file, 'w') as f:
-        f.write("Manual Scoring Batch - Selected Subfolders\n")
-        f.write("=" * 50 + "\n\n")
-        for item in batch_content:
-            f.write(f"Subfolder: {item['subfolder_name']}\n")
-            f.write(f"Path: {item['subfolder_path']}\n")
-            f.write(f"MBP Image: {item['mbp_image']}\n")
-            f.write(f"Pillar Image: {item['pillar_image']}\n")
-            f.write("-" * 50 + "\n\n")
-    
-    return batch_content
+    print(f"Updated results saved to: {output_file}")
 
-def call_manual(mbp_path, pillar_path, subfolder_name):
-    """Launch ManualScore.py with pre-loaded image paths"""
-    try:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        manual_score_script = os.path.join(current_dir, "ManualScore.py")
-        
-        if not os.path.exists(manual_score_script):
-            manual_score_script = "ManualScore.py"
-            
-        if os.path.exists(manual_score_script):
-            print(f"\nLaunching manual scoring for: {subfolder_name}")
-            print(f"  Pillar image: {pillar_path}")
-            print(f"  MBP image: {mbp_path}")
-            
-            # Single command string
-            command = f'"{sys.executable}" "{manual_score_script}" "{pillar_path}" "{mbp_path}"'
-            print(f"  Command: {command}")
-            
-            # Run as a single string with shell=True
-            result = subprocess.run(command, capture_output=True, text=True, shell=True)
-            
-            if result.returncode != 0:
-                print(f"ManualScore.py exited with error (code {result.returncode})")
-                print(f"Error output: {result.stderr}")
-                return False
-            return True
-            
-        else:
-            print(f"Warning: ManualScore.py not found at {manual_score_script}")
-            return False
-            
-    except Exception as e:
-        print(f"Error launching ManualScore.py: {e}")
-        return False
-
-def gui(batch_content):
+def gui(batch_content, output_file):
     root = tk.Tk()
-    root.title("Manual Scoring Launcher")
-    root.geometry("600x400")
+    root.title("Quality Control Class Scoring")
+    root.geometry("800x600")
     
     frame = tk.Frame(root)
     frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
     
-    title_label = tk.Label(frame, text="Selected Subfolders for Manual Scoring", 
-                          font=("Courier", 14, "bold"))
-    title_label.pack(pady=10)
+    tk.Label(frame, text="Randomly Selected Series", font=("Arial", 14, "bold")).pack(pady=10)
+    tk.Label(frame, text="Double-click a row to Launch ManualScore").pack()
 
-    subtitle = tk.Label(frame, text="Click 'Start Manual Scoring' to begin processing each subfolder one by one")
-    subtitle.pack(pady=5)
-
-    listbox = tk.Listbox(frame, height=10, font=("Courier", 10))
+    # Listbox to show folders and current scores
+    listbox = tk.Listbox(frame, height=15, font=("Courier", 10))
     listbox.pack(fill=tk.BOTH, expand=True, pady=10)
     
-    for i, item in enumerate(batch_content, 1):
-        listbox.insert(tk.END, f"{i}. {item['subfolder_name']}")
+    # Scrollbar for listbox
+    scrollbar = tk.Scrollbar(listbox)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    listbox.config(yscrollcommand=scrollbar.set)
+    scrollbar.config(command=listbox.yview)
     
-    # Status label
-    status_label = tk.Label(frame, text=f"Total subfolders selected: {len(batch_content)}", 
-                           font=("Courier", 10))
-    status_label.pack(pady=5)
-    
-    def start_manual_scoring():
-        """Start manual scoring process for all selected subfolders"""
-        if not batch_content:
-            messagebox.showinfo("No Subfolders", "No subfolders selected for manual scoring.")
+    def refresh_list():
+        listbox.delete(0, tk.END)
+        for i, item in enumerate(batch_content, 1):
+            score = item.get('class_score', "Not Scored")
+            scores_info = ""
+            if 'scores' in item:
+                scores = item['scores']
+                scores_info = f" | 0:{scores.get('0', 0)} 1:{scores.get('1', 0)} 2:{scores.get('2', 0)} 3:{scores.get('3', 0)}"
+            listbox.insert(tk.END, f"{i}. [{score}] - {item['subfolder_name']}{scores_info}")
+
+    refresh_list()
+
+    def score_item(event=None):
+        selection = listbox.curselection()
+        if not selection:
             return
         
-        response = messagebox.askyesno(
-            "Start Manual Scoring",
-            f"You are about to start manual scoring for {len(batch_content)} subfolders.\n\n"
-            f"This will open the ManualScore.py application for each subfolder one by one.\n\n"
-            f"The image paths will be automatically loaded - no need to select them manually.\n\n"
-            f"Continue?"
-        )
+        index = selection[0]
+        item = batch_content[index]
+
+        pillar_path = item['pillar_path']
+        mbp_path = item['mbp_path']
         
-        if response:
-            root.destroy()  # Close the launcher window
+        print(f"Launching ManualScore for: {item['subfolder_name']}")
+        
+        # Disable the button while scoring
+        score_button.config(state=tk.DISABLED)
+        status_label.config(text=f"Scoring: {item['subfolder_name']}...")
+        root.update()
+        
+        try:
+            # Create a unique temporary file for this scoring session
+            temp_dir = tempfile.gettempdir()
+            temp_file = os.path.join(temp_dir, f"manualscore_{item['subfolder_name']}_{int(time.time())}.json")
             
-            print("\n" + "="*60)
-            print("STARTING MANUAL SCORING PROCESS")
-            print("="*60)
-            print("Note: Image paths will be automatically loaded for each folder")
-            print("="*60)
+            # Delete any existing temp file
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
             
-            for i, item in enumerate(batch_content, 1):
-                print(f"\n[{i}/{len(batch_content)}] Processing: {item['subfolder_name']}")
-                print(f"  Pillar image: {item['pillar_image']}")
-                print(f"  MBP image: {item['mbp_image']}")
+            # Get the directory of the current script
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            manualscore_path = os.path.join(script_dir, "ManualScore.py")
+            
+            if os.path.exists(manualscore_path):
+                # Run ManualScore with the temp file as third argument
+                process = subprocess.Popen(
+                    [sys.executable, manualscore_path, pillar_path, mbp_path, temp_file],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE
+                )
                 
-                # No need for user input - automatically launch
-                print(f"\nLaunching ManualScore.py for {item['subfolder_name']}...")
+                # Wait for the process to complete
+                process.wait()
                 
-                success = call_manual(item['mbp_image'], item['pillar_image'], item['subfolder_name'])
-                
-                if success:
-                    print(f":) Completed manual scoring for {item['subfolder_name']}")
+                # Check if temp file was created and contains data
+                if os.path.exists(temp_file):
+                    try:
+                        with open(temp_file, 'r') as f:
+                            scores_data = json.load(f)
+                        
+                        # Update batch content with scores
+                        batch_content[index]['scores'] = scores_data['scores']
+                        batch_content[index]['class_score'] = "Scored"
+                        batch_content[index]['total_scored'] = scores_data['total_scored']
+                        batch_content[index]['total_boxes'] = scores_data['total_boxes']
+                        
+                        batch_save(batch_content, output_file)
+                        refresh_list()
+                        
+                        # Show success message
+                        scores = scores_data['scores']
+                        messagebox.showinfo(
+                            "Scoring Complete", 
+                            f"Scores saved for {item['subfolder_name']}:\n"
+                            f"Score 0: {scores['0']}\n"
+                            f"Score 1: {scores['1']}\n"
+                            f"Score 2: {scores['2']}\n"
+                            f"Score 3: {scores['3']}\n"
+                            f"Total: {scores_data['total_scored']} boxes scored"
+                        )
+                        
+                        # Clean up temp file
+                        os.remove(temp_file)
+                        
+                    except json.JSONDecodeError:
+                        messagebox.showerror("Error", f"Could not read scores from temporary file.")
+                        # Clean up corrupted temp file
+                        if os.path.exists(temp_file):
+                            os.remove(temp_file)
                 else:
-                    print(f"!!! Failed to complete {item['subfolder_name']}")
+                    messagebox.showinfo("No Scores", "ManualScore was closed without saving scores.")
+                    
+            else:
+                messagebox.showerror("Error", f"Could not find ManualScore.py at {manualscore_path}")
                 
-                print("-"*50)
-                
-                # Ask if user wants to continue after each folder
-                if i < len(batch_content):
-                    next_folder = batch_content[i]['subfolder_name']
-                    response = input(f"\nPress Enter to continue to {next_folder} or 'q' to quit: ")
-                    if response.lower() == 'q':
-                        print("\nManual scoring stopped by user.")
-                        break
-            
-            print("\n" + "="*60)
-            print("MANUAL SCORING PROCESS COMPLETED")
-            print("="*60)
-            print(f"\nProcessed {i} out of {len(batch_content)} subfolders.")
-            print("You can now review and score the images.")
-            
-            messagebox.showinfo(
-                "Process Complete",
-                f"Manual scoring completed for {i} out of {len(batch_content)} subfolders.\n\n"
-                f"Results are saved in each folder's scoring directories."
-            )
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to run ManualScore:\n{e}")
+        finally:
+            # Re-enable the button
+            score_button.config(state=tk.NORMAL)
+            status_label.config(text="")
     
-    # Button frame
+    def finish_and_close():
+        """Close the application properly."""
+        # Save final state
+        batch_save(batch_content, output_file)
+        
+        # Calculate summary
+        scored_items = [item for item in batch_content if item.get('class_score') == 'Scored']
+        scored_count = len(scored_items)
+        
+        # Prepare summary text
+        summary_text = f"QUALITY CONTROL SUMMARY\n"
+        summary_text += "="*50 + "\n"
+        summary_text += f"Total samples: {len(batch_content)}\n"
+        summary_text += f"Samples scored: {scored_count}\n"
+        summary_text += f"Results saved to: {output_file}\n\n"
+        
+        if scored_count > 0:
+            # Calculate totals and averages
+            total_scores = {'0': 0, '1': 0, '2': 0, '3': 0}
+            total_boxes = 0
+            total_scored = 0
+            
+            summary_text += "INDIVIDUAL RESULTS:\n"
+            summary_text += "-"*50 + "\n"
+            
+            for item in scored_items:
+                scores = item.get('scores', {})
+                total_scored_item = item.get('total_scored', 0)
+                total_boxes_item = item.get('total_boxes', 0)
+                
+                summary_text += f"{item['subfolder_name']}:\n"
+                summary_text += f"  Score 0: {scores.get('0', 0):3d} | Score 1: {scores.get('1', 0):3d} | "
+                summary_text += f"Score 2: {scores.get('2', 0):3d} | Score 3: {scores.get('3', 0):3d}\n"
+                summary_text += f"  Scored: {total_scored_item}/{total_boxes_item} boxes\n"
+                
+                # Add to totals
+                for key in total_scores:
+                    total_scores[key] += scores.get(key, 0)
+                total_scored += total_scored_item
+                total_boxes += total_boxes_item
+            
+            summary_text += "\n" + "="*50 + "\n"
+            summary_text += "TOTALS:\n"
+            summary_text += f"Score 0: {total_scores['0']:5d}\n"
+            summary_text += f"Score 1: {total_scores['1']:5d}\n"
+            summary_text += f"Score 2: {total_scores['2']:5d}\n"
+            summary_text += f"Score 3: {total_scores['3']:5d}\n"
+            summary_text += f"Total boxes scored: {total_scored}\n"
+            summary_text += f"Total boxes available: {total_boxes}\n"
+            
+            # Calculate percentages
+            if total_scored > 0:
+                summary_text += "\nPERCENTAGES:\n"
+                for key in ['0', '1', '2', '3']:
+                    percentage = (total_scores[key] / total_scored) * 100
+                    summary_text += f"Score {key}: {percentage:6.1f}%\n"
+        
+        # Show summary in messagebox and also save to text file
+        messagebox.showinfo("Summary", summary_text)
+        
+        # Also save summary to a text file
+        summary_file = output_file.replace('.json', '_summary.txt')
+        with open(summary_file, 'w') as f:
+            f.write(summary_text)
+        print(f"Summary saved to: {summary_file}")
+        
+        # Close the GUI and exit program
+        root.destroy()
+        sys.exit(0)
+
+    listbox.bind('<Double-1>', score_item)
+
     button_frame = tk.Frame(frame)
     button_frame.pack(pady=10)
     
-    # Start button
-    start_button = tk.Button(button_frame, text="Start Manual Scoring", 
-                            command=start_manual_scoring,
-                            bg="green", fg="white",
-                            font=("Arial", 12, "bold"),
-                            padx=20, pady=10)
-    start_button.pack(side=tk.LEFT, padx=10)
+    score_button = tk.Button(button_frame, text="Score Selected", command=score_item, bg="blue", fg="white")
+    score_button.pack(side=tk.LEFT, padx=5)
     
-    # Exit button
-    exit_button = tk.Button(button_frame, text="Exit", 
-                           command=root.destroy,
-                           bg="red", fg="white",
-                           font=("Arial", 12),
-                           padx=20, pady=10)
-    exit_button.pack(side=tk.LEFT, padx=10)
+    tk.Button(button_frame, text="Finish & Close", command=finish_and_close, bg="green", fg="white").pack(side=tk.LEFT, padx=5)
+    
+    # Status label
+    status_label = tk.Label(frame, text="", fg="blue")
+    status_label.pack(pady=5)
+    
+    # Instructions
+    tk.Label(frame, text="Instructions:", font=("Arial", 10, "bold")).pack(pady=(20, 5))
+    tk.Label(frame, text="1. Double-click a sample to open ManualScore", font=("Arial", 9)).pack(anchor="w")
+    tk.Label(frame, text="2. Click 'Detect Pillar Centers' or add dots manually", font=("Arial", 9)).pack(anchor="w")
+    tk.Label(frame, text="3. Click 'Create Boxes' to generate scoring boxes", font=("Arial", 9)).pack(anchor="w")
+    tk.Label(frame, text="4. Score boxes (0-3) and click 'Save & Close'", font=("Arial", 9)).pack(anchor="w")
+    tk.Label(frame, text="5. Scores will be automatically saved", font=("Arial", 9)).pack(anchor="w")
     
     root.mainloop()
 
 def main():
+    print("="*60)
+    print("QUALITY CONTROL SCORING TOOL")
+    print("="*60)
+    
     root = tk.Tk()
     root.withdraw()
     
-    print("="*60)
-    print("RANDOM SUBFOLDER SELECTOR FOR MANUAL SCORING")
-    print("="*60)
-    
-    # Ask user for parent directory
-    print("\nPlease select the parent directory containing your subfolders...")
     parent_directory = filedialog.askdirectory(title="Select Parent Directory")
-    
     if not parent_directory:
-        print("No directory selected. Exiting.")
         return
     
-    # Select random subfolders (10%)
+    # Check if a scoring file already exists to resume work
+    batch_file = os.path.join(parent_directory, "manual_scores.json")
+    
+    if os.path.exists(batch_file):
+        use_existing = messagebox.askyesno("Resume?", "A previous scoring file (manual_scores.json) was found.\nDo you want to load it?")
+        if use_existing:
+            with open(batch_file, 'r') as f:
+                batch_content = json.load(f)
+            print(f"Loaded existing batch file with {len(batch_content)} entries.")
+            gui(batch_content, batch_file)
+            return
+
+    # If not resuming, create new selection
     selected_subfolders = random_selection(parent_directory, percentage=10)
     
     if not selected_subfolders:
-        messagebox.showinfo("No Subfolders", "No valid subfolders found with mbp_mip.png and pillar_mip.png.")
+        messagebox.showinfo("No Subfolders", "No valid subfolders found.")
         return
     
-    # Create batch json file
-    batch_file = os.path.join(parent_directory, "manual_scoring_batch.json")
-    batch_content = batch(selected_subfolders, batch_file)
+    batch_content = []
+    for subfolder in selected_subfolders:
+        batch_content.append({
+            'subfolder_name': subfolder['name'],
+            'subfolder_path': subfolder['path'],
+            'class_score': None,
+            'pillar_path': subfolder['pillar_path'],
+            'mbp_path': subfolder['mbp_path']
+        })
     
-    # Ask user if they want to start manual scoring
-    response = messagebox.askyesno(
-        "Manual Scoring Ready",
-        f"Selected {len(selected_subfolders)} subfolders for manual scoring.\n\n"
-        f"Batch file saved to:\n{batch_file}\n\n"
-        f"Image paths will be automatically loaded for each folder.\n\n"
-        f"Do you want to start the manual scoring process now?"
-    )
+    # Save initial file
+    batch_save(batch_content, batch_file)
     
-    if response:
-        gui(batch_content)
-    else:
-        print("\nBatch file created. You can start manual scoring later by:")
-        print(f"1. Reviewing the batch file: {batch_file}")
-        print(f"2. Running ManualScore.py manually for each selected subfolder")
-        print("\nSelected subfolders:")
-        for item in batch_content:
-            print(f"  - {item['subfolder_name']}")
+    messagebox.showinfo("Selection Complete", 
+                        f"Selected {len(batch_content)} series.\nResults will save to manual_scores.json")
+    
+    # Start the scoring GUI
+    gui(batch_content, batch_file)
     
     print("\n" + "="*60)
     print("PROCESS COMPLETED")
+    print(f"Final scores saved in: {batch_file}")
     print("="*60)
 
 if __name__ == "__main__":

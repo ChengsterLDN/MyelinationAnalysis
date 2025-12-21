@@ -31,3 +31,5 @@ MBP Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Ex
 Pillar Image: C:/Users/jonat/Documents/My Documents/MecBioMed/MyelinationProject/Exp4 Clem R1/Exp4-Clem-R1_extracted_pngs\Exp4-Clem-Dose3-6\pillar_mip.png
 --------------------------------------------------
 
+Folder: Exp4-Clem-Dose0-2    | Score 0: 102   | Score 1: 33    | Score 2: 19    | Score 3: 34   
+Folder: Exp4-Clem-Dose0-2    | Score 0: 5     | Score 1: 0     | Score 2: 0     | Score 3: 0    
