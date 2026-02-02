@@ -9,23 +9,23 @@ from skimage import filters, morphology
 import cv2
 
 class MIPProcessor:
-    """Maximum Intensity Projection processing"""
+    # Maximum Intensity Projection processing 
     
     def __init__(self):
 
         self.supported_formats = {'.png', '.jpg', '.jpeg'}
     
     def create_mip(self, image_paths: List[str], dim: bool = False, 
-                   apply_otsu: bool = False, apply_yellow: bool = False) -> Optional[Image.Image]:
+                   apply_otsu: bool = False, pillars: bool = False, nuclei_denoise: bool = False) -> Optional[Image.Image]:
         """
         Args:
             image_paths: List of paths to images in the stack
-            dim_to_25_percent: Whether to dim each image to 25% brightness
-            apply_otsu: Whether to apply Otsu thresholding
-            apply_yellow: Whether to apply yellow mask to the MIP
+            dim to 25%
+            apply_otsu
+            pillars - apply yellow and otsu basically
+            nuclei_denoise - specific nuclei denoising mainly open morphological transformation
             
-        Returns:
-            PIL Image object containing the MIP, or None if processing fails
+        Returns PIL Image object containing the MIP, or None if processing fails
         """
         if not image_paths:
             return None
@@ -43,9 +43,9 @@ class MIPProcessor:
                 img = Image.open(img_path).convert('RGB')
                 img_array = np.array(img, dtype=np.float32)
                 
-                # Apply 25% dimming only if requested
+                # Apply dimming only if requested
                 if dim:
-                    img_array = img_array * 0.25
+                    img_array = img_array * 0.5
                 
                 # Update MIP - take maximum intensity at each pixel
                 mip_array = np.maximum(mip_array, img_array)
@@ -59,8 +59,11 @@ class MIPProcessor:
                 mip_image = self.apply_otsu(mip_image)
             
             # Apply yellow mask if requested
-            if apply_yellow:
-                mip_image = self.apply_yellow(mip_image)
+            if pillars:
+                mip_image = self.pillars(mip_image)
+
+            if nuclei_denoise:
+                mip_image = self.nuclei_denoise(mip_image)
             
             return mip_image
             
@@ -69,31 +72,23 @@ class MIPProcessor:
             return None
 
     def apply_otsu(self, image: Image.Image) -> Image.Image:
-        """
-        Apply Otsu thresholding to an image with denoising.
-        
-        Args:
-            image: PIL Image to process
-            
-        Returns:
-            Thresholded PIL Image
-        """
+        #Otsu Thresholding
         try:
             # Convert to grayscale for thresholding
-            gray_image = image.convert('L')
-            gray_array = np.array(gray_image)
+            grey_image = image.convert('L')
+            grey_array = np.array(grey_image)
             
             # Calculate Otsu threshold
-            threshold = filters.threshold_otsu(gray_array)
+            threshold = filters.threshold_otsu(grey_array)
             
             # Apply threshold
-            binary_array = (gray_array > threshold).astype(np.uint8) * 255
+            binary_array = (grey_array > threshold).astype(np.uint8) * 255
             
             # Apply fastNlMeansDenoising
             binary_cleaned = cv2.fastNlMeansDenoising(binary_array)
             
             # Apply morphological denoising
-            binary_final = self.apply_morphological_denoising(binary_cleaned)
+            binary_final = self.morph_denoise(binary_cleaned)
             
             # Convert back to RGB
             binary_rgb = np.stack([binary_final] * 3, axis=-1)
@@ -104,15 +99,13 @@ class MIPProcessor:
             print(f"Error applying Otsu threshold: {e}")
             return image
 
-    def apply_morphological_denoising(self, binary_array: np.ndarray) -> np.ndarray:
+    def morph_denoise(self, binary_array: np.ndarray) -> np.ndarray:
         """
-        Apply morphological operations to denoise binary image.
-        
+        Denoising
         Args:
-            binary_array: Binary image array
+            binary_array
             
-        Returns:
-            Denoised binary image array
+        ReturnsDenoised binary image array
         """
         try:
             # Remove small noise with opening
@@ -132,16 +125,7 @@ class MIPProcessor:
             print(f"Error applying morphological denoising: {e}")
             return binary_array
     
-    def apply_yellow(self, image: Image.Image) -> Image.Image:
-        """
-        Apply yellow mask to an image - only where there is white after denoising.
-        
-        Args:
-            image: PIL Image to process
-            
-        Returns:
-            Yellow-masked PIL Image
-        """
+    def pillars(self, image: Image.Image) -> Image.Image:
         try:
             # Convert image to array and apply Otsu thresholding with full denoising
             gray_image = image.convert('L')
@@ -157,7 +141,7 @@ class MIPProcessor:
             binary_cleaned = cv2.fastNlMeansDenoising(binary_array)
             
             # Apply morphological denoising
-            white_regions = self.apply_morphological_denoising(binary_cleaned)
+            white_regions = self.morph_denoise(binary_cleaned)
             
             # Create yellow mask only where there are white regions
             img_array = np.array(image)
@@ -178,9 +162,44 @@ class MIPProcessor:
         except Exception as e:
             print(f"Error applying yellow mask: {e}")
             return image
+    
+    def nuclei_denoise(self, image: Image.Image) -> Image.Image:
+        #Just for nuclei
+
+        try:
+            grey_image = image.convert('L')
+            grey_array = np.array(grey_image)
+            mask = grey_array.astype(np.uint8)
+            
+            kernel_size = 5  # Larger kernel > stronger denoising
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))
+            
+
+            cleaned_mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+            
+            # circular kernel
+            circular_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+            cleaned_mask = cv2.morphologyEx(cleaned_mask, cv2.MORPH_OPEN, circular_kernel)
+            
+            # Remove very small objects from the mask
+            cleaned_mask = morphology.remove_small_objects(
+                cleaned_mask.astype(bool), 
+                min_size=100  # Larger minimum size for stronger denoising
+            ).astype(np.uint8)
+            
+            # preserves intensity values but removes noise in background areas
+            result_array = grey_array.copy()
+            result_array[cleaned_mask == 0] = 0  # Set background to black where mask is 0
+            result_array = cv2.GaussianBlur(result_array, (3, 3), 0.5)
+            
+            return Image.fromarray(result_array.astype(np.uint8))
+            
+        except Exception as e:
+            print(f"Error applying nuclei denoising: {e}")
+            return image
 
 class FolderProcessor:
-    """Processes folder structure and manages MIP creation"""
+    #Processes folder structure and manages MIP creation
     
     def __init__(self, parent_folder: str):
 
@@ -283,23 +302,26 @@ class FolderProcessor:
             if folder_name == 'nuclei':
                 mip_image = self.mip_processor.create_mip(
                     image_paths, 
-                    dim=True,
-                    apply_otsu=True,
-                    apply_yellow=False
+                    dim=False,
+                    apply_otsu=False,
+                    pillars=False,
+                    nuclei_denoise=True
                 )
             elif folder_name == 'pillar':
                 mip_image = self.mip_processor.create_mip(
                     image_paths, 
                     dim=False,
                     apply_otsu=True,
-                    apply_yellow=True
+                    pillars=True,
+                    nuclei_denoise=False
                 )
             else:  # mbp
                 mip_image = self.mip_processor.create_mip(
                     image_paths, 
                     dim=False,
                     apply_otsu=False,
-                    apply_yellow=False
+                    pillars=False,
+                    nuclei_denoise=False
                 )
             
             if mip_image is None:
@@ -315,7 +337,7 @@ class FolderProcessor:
                 # Create status message
                 status_parts = []
                 if folder_name == 'nuclei':
-                    status_parts.extend(["25% dimmed", "Otsu + Denoising + Morphological"])
+                    status_parts.extend(["25% dimmed", "Denoising + Morphological"])
                 elif folder_name == 'pillar':
                     status_parts.extend(["full brightness", "Otsu + Denoising + Morphological", "yellow mask"])
                 else:  # mbp
@@ -331,12 +353,7 @@ class FolderProcessor:
         return success
     
     def process_all_series(self) -> dict:
-        """
-        Process all folders in the parent folder.
-        
-        Returns:
-            Dictionary with processing results
-        """
+        #Process all folders in the parent folder.
         series_folders = self.find_series_folders()
         
         if not series_folders:
@@ -371,7 +388,7 @@ def main():
     """Main function to run the MIP processing."""
     # Use filedialog to select folder
     root = tk.Tk()
-    root.withdraw()  # Hide the main window
+    root.withdraw() 
     
     print("Select the parent folder containing your data folders")
     parent_folder = filedialog.askdirectory(title="Select Parent Folder")
@@ -381,7 +398,7 @@ def main():
         return
     
     print("\nProcessing details:")
-    print("- Nuclei: 25% dimmed + Otsu thresholding + Denoising + Morphological")
+    print("- Nuclei: 25% dimmed + Denoising + Morphological")
     print("- MBP: Full brightness (no additional processing)")
     print("- Pillar: Full brightness + Otsu thresholding + Denoising + Morphological + Yellow mask")
     print("- Folder priority: valid → invalid → main folder")
