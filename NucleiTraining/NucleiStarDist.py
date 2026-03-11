@@ -170,6 +170,7 @@ def process_all_subfolders(parent_directory, model_type='2D_versatile_fluo'):
     """
     print(f"Loading pretrained StarDist model: {model_type}...")
     model = StarDist2D.from_pretrained(model_type)
+    model = StarDist2D(None, name='SDFTv1', basedir='models')
 
     processed_folders = 0
     successful_folders = 0
