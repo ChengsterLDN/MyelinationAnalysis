@@ -10,14 +10,14 @@ from csbdeep.utils import normalize
 
 
 def setup_gpu():
-    """Configure TensorFlow to use GPU with memory growth enabled."""
+    # ensure GPU hardware
     gpus = tf.config.list_physical_devices('GPU')
     if gpus:
-        print(f"✅ GPU detected: {gpus}")
+        print(f"GPU detected: {gpus}")
         for gpu in gpus:
             tf.config.experimental.set_memory_growth(gpu, True)
     else:
-        print("⚠️  No GPU detected — running on CPU")
+        print("No GPU detected — running on CPU")
 
 
 class NucleiStarDist:
@@ -99,7 +99,7 @@ class NucleiStarDist:
             }
             self.nuclei_prop.append(properties)
 
-        # Derive output name from the parent folder (mirrors NucleiAnalysis.py behaviour)
+        # Derive output name from the parent folder
         if os.path.isdir(self.image_path):
             parent_folder_name = os.path.basename(os.path.normpath(self.image_path))
         else:
@@ -116,7 +116,7 @@ class NucleiStarDist:
         return len(self.nuclei_count) > 0
 
     def visualise(self):
-        """Overlay StarDist segmentation on the original image and save a PNG."""
+        #Overlay StarDist segmentation on the original image and save a PNG
         if self.labels is None or not self.nuclei_prop:
             return
 
